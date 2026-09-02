@@ -6,6 +6,12 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Modal } from '../ui/Modal';
 import { useToast } from '../ui/Toast';
+import {
+  signUpWithEmail,
+  signInWithEmail,
+  signInWithGoogle,
+  resetPassword,
+} from '../../services/authService';
 
 interface AuthScreenProps {
   onAuthenticate: (user: User) => void;
@@ -63,63 +69,83 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticate }) => {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
     setIsLoading(true);
+    setErrors({});
 
-    setTimeout(() => {
+    try {
+      if (isSignUp) {
+        const newUser = await signUpWithEmail(fullName, email, password);
+        showToast('Account created successfully! Welcome to Study to Shine.');
+        onAuthenticate(newUser);
+      } else {
+        const loggedInUser = await signInWithEmail(email, password, rememberMe);
+        showToast('Welcome back to Study to Shine!');
+        onAuthenticate(loggedInUser);
+      }
+    } catch (err: any) {
+      console.error('Authentication error:', err);
+      let message = 'An error occurred during authentication. Please try again.';
+      const code = err?.code || '';
+
+      if (code === 'auth/email-already-in-use') {
+        message = 'An account with this email already exists. Please sign in instead.';
+        setErrors((prev) => ({ ...prev, email: 'Email is already registered' }));
+      } else if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+        message = 'Invalid email or password. Please check your credentials.';
+        setErrors((prev) => ({ ...prev, password: 'Incorrect email or password' }));
+      } else if (code === 'auth/weak-password') {
+        message = 'Password is too weak. Please use at least 6 characters.';
+        setErrors((prev) => ({ ...prev, password: 'Password must be at least 6 characters' }));
+      } else if (code === 'auth/too-many-requests') {
+        message = 'Access temporarily disabled due to many failed attempts. Try again later.';
+      } else if (err?.message) {
+        message = err.message;
+      }
+      showToast(message, 'error');
+    } finally {
       setIsLoading(false);
-      const authenticatedUser: User = {
-        id: 'usr_' + Math.random().toString(36).substring(2, 9),
-        name: isSignUp ? fullName.trim() : (email.split('@')[0] || 'Alex Chen'),
-        email: email.trim(),
-        gradeLevel: 'Grade 12 / High School Senior',
-        studyGoalHours: 3,
-        completedTasksToday: 4,
-        streakDays: 5,
-        rememberMe,
-      };
-
-      showToast(isSignUp ? 'Account created successfully! Welcome to Study to Shine.' : 'Welcome back to Study to Shine!');
-      onAuthenticate(authenticatedUser);
-    }, 900);
+    }
   };
 
-  const handleGoogleAuth = () => {
+  const handleGoogleAuth = async () => {
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const user = await signInWithGoogle();
+      showToast('Signed in successfully with Google!');
+      onAuthenticate(user);
+    } catch (err: any) {
+      console.error('Google Auth error:', err);
+      if (err?.code !== 'auth/popup-closed-by-user') {
+        showToast(err?.message || 'Failed to sign in with Google.', 'error');
+      }
+    } finally {
       setIsLoading(false);
-      const googleUser: User = {
-        id: 'usr_g_' + Math.random().toString(36).substring(2, 9),
-        name: 'Alex Chen',
-        email: 'alex.chen@student.edu',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-        gradeLevel: 'AP Scholar / High School Senior',
-        studyGoalHours: 4,
-        completedTasksToday: 3,
-        streakDays: 7,
-        rememberMe: true,
-      };
-      showToast('Signed in with Google account.');
-      onAuthenticate(googleUser);
-    }, 700);
+    }
   };
 
-  const handleForgotPasswordSubmit = (e: React.FormEvent) => {
+  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!forgotEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail)) {
       showToast('Please enter a valid email address', 'error');
       return;
     }
-    setForgotSubmitted(true);
-    showToast(`Password reset link sent to ${forgotEmail}`);
-    setTimeout(() => {
-      setForgotPasswordOpen(false);
-      setForgotSubmitted(false);
-      setForgotEmail('');
-    }, 2000);
+    try {
+      await resetPassword(forgotEmail);
+      setForgotSubmitted(true);
+      showToast(`Password reset link sent to ${forgotEmail}`);
+      setTimeout(() => {
+        setForgotPasswordOpen(false);
+        setForgotSubmitted(false);
+        setForgotEmail('');
+      }, 2500);
+    } catch (err: any) {
+      console.error('Reset password error:', err);
+      showToast(err?.message || 'Could not send reset email. Verify email address.', 'error');
+    }
   };
 
   return (

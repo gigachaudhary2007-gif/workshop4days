@@ -1,0 +1,26 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile record created on signup",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Unique user ID matching Firebase Auth UID" },
+        "name": { "type": "string", "description": "User display or legal name" },
+        "email": { "type": "string", "description": "User email address" },
+        "createdAt": { "type": "string", "description": "ISO 8601 account creation timestamp" },
+        "avatar": { "type": "string", "description": "Optional avatar URL" },
+        "gradeLevel": { "type": "string", "description": "Academic grade level or program" },
+        "studyGoalHours": { "type": "number", "description": "Daily study target in hours" },
+        "streakDays": { "type": "number", "description": "Study streak in days" }
+      },
+      "required": ["userId", "name", "email", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile document keyed by auth UID"
+    }
+  }
+}

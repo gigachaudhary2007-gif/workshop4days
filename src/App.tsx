@@ -21,39 +21,23 @@ import { SoundProvider } from './context/SoundContext';
 import { FloatingActionMenu } from './components/ui/FloatingActionMenu';
 import { LiquidGlassBackground } from './components/ui/LiquidGlassBackground';
 import { AnimationPlacementPreview } from './components/preview/AnimationPlacementPreview';
+import { onAuthUserChanged, logoutUser, updateUserProfile } from './services/authService';
 
 function AppContent() {
   const { showToast } = useToast();
 
-  // Authentication State
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('study_to_shine_user');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed) {
-          parsed.name = 'Vishal Patel';
-          parsed.email = 'gigachaudhary2007@gmail.com';
-          localStorage.setItem('study_to_shine_user', JSON.stringify(parsed));
-        }
-        return parsed;
-      } catch (e) {
-        return null;
-      }
-    }
-    // Default demo user for instant preview experience
-    return {
-      id: 'usr_default',
-      name: 'Vishal Patel',
-      email: 'gigachaudhary2007@gmail.com',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-      gradeLevel: 'Grade 12 / AP Scholar',
-      studyGoalHours: 3,
-      completedTasksToday: 4,
-      streakDays: 5,
-      rememberMe: true,
-    };
-  });
+  // Authentication State with Firebase Persistence
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // Subscribe to Firebase Auth state for seamless session persistence across reloads
+  useEffect(() => {
+    const unsubscribe = onAuthUserChanged((user) => {
+      setCurrentUser(user);
+      setAuthLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Current Navigation View
   const [currentView, setCurrentView] = useState<AppView>('home');
@@ -129,10 +113,23 @@ function AppContent() {
     setCurrentView('home');
   };
 
-  const handleLogout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('study_to_shine_user');
-    showToast('Logged out of Study to Shine');
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      setCurrentUser(null);
+      localStorage.removeItem('study_to_shine_user');
+      showToast('Logged out of Study to Shine');
+    } catch (err) {
+      console.error('Logout error', err);
+      setCurrentUser(null);
+    }
+  };
+
+  const handleUpdateUser = async (updated: User) => {
+    setCurrentUser(updated);
+    if (updated.id) {
+      await updateUserProfile(updated.id, updated);
+    }
   };
 
   const handleResetData = () => {
@@ -171,7 +168,18 @@ function AppContent() {
     handleSaveNotebookNote(newNote);
   };
 
-  // If user is not authenticated, show AuthScreen
+  // While restoring auth state from Firebase on page load/refresh
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center">
+        <div className="w-12 h-12 rounded-2xl bg-white border border-emerald-200/80 shadow-[0_8px_24px_rgba(22,131,91,0.12)] flex items-center justify-center text-[#16835B] animate-pulse">
+          <span className="w-5 h-5 rounded-full border-2 border-[#16835B] border-t-transparent animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  // If user is not authenticated, show AuthScreen (Protected pages cannot be accessed)
   if (!currentUser) {
     return <AuthScreen onAuthenticate={handleAuthenticate} />;
   }
@@ -297,7 +305,7 @@ function AppContent() {
               {currentView === 'settings' && (
                 <SettingsView
                   user={currentUser}
-                  onUpdateUser={(updated) => setCurrentUser(updated)}
+                  onUpdateUser={handleUpdateUser}
                   onLogout={handleLogout}
                   onResetData={handleResetData}
                 />
