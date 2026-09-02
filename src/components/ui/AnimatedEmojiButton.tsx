@@ -30,10 +30,10 @@ export const AnimatedEmojiButton: React.FC<AnimatedEmojiButtonProps> = ({
 
   const variantStyles = {
     light:
-      'bg-white hover:bg-[#FBFBF9] text-[#171A18] border-[#E1E5E1] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-md hover:border-[#16835B]/40',
+      'bg-white/80 backdrop-blur-md hover:bg-white/95 text-[#171A18] border-white/80 shadow-[0_4px_16px_rgba(15,98,70,0.05)] hover:shadow-md hover:border-[#16835B]/30',
     brand:
       'bg-[#16835B] hover:bg-[#0F6246] text-white border-transparent shadow-[0_4px_14px_rgba(22,131,91,0.25)]',
-    dark: 'bg-[#121915] hover:bg-[#1A241E] text-white border-[#2A342D] shadow-md',
+    dark: 'bg-[#121915]/90 backdrop-blur-md hover:bg-[#1A241E] text-white border-[#2A342D] shadow-md',
   };
 
   const sizeStyles = {
@@ -55,14 +55,14 @@ export const AnimatedEmojiButton: React.FC<AnimatedEmojiButtonProps> = ({
       whileTap={{ scale: 0.96 }}
       className={`relative inline-flex items-center font-bold tracking-tight select-none cursor-pointer border transition-all duration-200 ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
     >
-      {/* Waving Hand Container with Blue Motion Waving Arcs (Exact replica of user's screenshots) */}
+      {/* Waving Hand Container with Soft Emerald Motion Waving Arcs */}
       <div className="relative inline-flex items-center justify-center">
         {showWavingArcs && (
           <>
             {/* Left waving motion arcs */}
             <motion.svg
               viewBox="0 0 16 24"
-              className="absolute -left-2.5 sm:-left-3 w-3 sm:w-3.5 h-4 sm:h-5 text-sky-400 pointer-events-none"
+              className="absolute -left-2.5 sm:-left-3 w-3 sm:w-3.5 h-4 sm:h-5 text-emerald-500 pointer-events-none"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -91,7 +91,7 @@ export const AnimatedEmojiButton: React.FC<AnimatedEmojiButtonProps> = ({
             {/* Right waving motion arcs */}
             <motion.svg
               viewBox="0 0 16 24"
-              className="absolute -right-2.5 sm:-right-3 -top-1 w-3 sm:w-3.5 h-4 sm:h-5 text-sky-400 pointer-events-none"
+              className="absolute -right-2.5 sm:-right-3 -top-1 w-3 sm:w-3.5 h-4 sm:h-5 text-emerald-500 pointer-events-none"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"

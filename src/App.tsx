@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { AppView, User, DoubtRecord, AnalyzedNoteRecord, NewsArticle, StudentNotebookNote } from './types';
 import {
   initialDoubts,
@@ -18,6 +19,7 @@ import { SettingsView } from './components/settings/SettingsView';
 import { ToastProvider, useToast } from './components/ui/Toast';
 import { SoundProvider } from './context/SoundContext';
 import { FloatingActionMenu } from './components/ui/FloatingActionMenu';
+import { LiquidGlassBackground } from './components/ui/LiquidGlassBackground';
 
 function AppContent() {
   const { showToast } = useToast();
@@ -174,7 +176,10 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex text-[#171A18] selection:bg-emerald-100 selection:text-emerald-900">
+    <div className="min-h-screen bg-transparent flex text-[#171A18] selection:bg-emerald-100 selection:text-emerald-900 relative">
+      {/* Slow Moving Liquid Glass Background Animation */}
+      <LiquidGlassBackground />
+
       {/* Left Sidebar Navigation */}
       <Sidebar
         currentView={currentView}
@@ -190,7 +195,7 @@ function AppContent() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen relative z-10">
         <TopHeader
           currentView={currentView}
           user={currentUser}
@@ -200,93 +205,103 @@ function AppContent() {
         />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-          {currentView === 'home' && (
-            <HomeDashboard
-              user={currentUser}
-              onNavigate={(view) => {
-                setCurrentView(view);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              recentDoubts={doubts}
-              recentNotes={aiNotes}
-              featuredNews={mockNewsArticles}
-              notebookNotes={notebookNotes}
-              onOpenDoubt={(d) => {
-                setActiveDoubt(d);
-                setCurrentView('doubt-solver');
-              }}
-              onOpenNote={(n) => {
-                setActiveAiNote(n);
-                setCurrentView('ai-notes');
-              }}
-              onOpenArticle={(a) => {
-                setActiveNewsArticle(a);
-                setCurrentView('news-paper');
-              }}
-              onOpenNotebookNote={(note) => {
-                setActiveNotebookNoteId(note.id);
-                setCurrentView('my-notes');
-              }}
-              onCreateNoteInSubject={(subject) => {
-                const newNote: StudentNotebookNote = {
-                  id: 'note-' + Date.now(),
-                  title: `${subject} Study Notes`,
-                  subject,
-                  content: `# ${subject} Study Notes\n\n- Key Theorems:\n- Principles:\n- Formulas & Examples:\n`,
-                  tags: [subject, 'FolderDeck'],
-                  isPinned: false,
-                  updatedAt: 'Just now',
-                };
-                handleSaveNotebookNote(newNote);
-                setActiveNotebookNoteId(newNote.id);
-                setCurrentView('my-notes');
-              }}
-            />
-          )}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentView}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {currentView === 'home' && (
+                <HomeDashboard
+                  user={currentUser}
+                  onNavigate={(view) => {
+                    setCurrentView(view);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  recentDoubts={doubts}
+                  recentNotes={aiNotes}
+                  featuredNews={mockNewsArticles}
+                  notebookNotes={notebookNotes}
+                  onOpenDoubt={(d) => {
+                    setActiveDoubt(d);
+                    setCurrentView('doubt-solver');
+                  }}
+                  onOpenNote={(n) => {
+                    setActiveAiNote(n);
+                    setCurrentView('ai-notes');
+                  }}
+                  onOpenArticle={(a) => {
+                    setActiveNewsArticle(a);
+                    setCurrentView('news-paper');
+                  }}
+                  onOpenNotebookNote={(note) => {
+                    setActiveNotebookNoteId(note.id);
+                    setCurrentView('my-notes');
+                  }}
+                  onCreateNoteInSubject={(subject) => {
+                    const newNote: StudentNotebookNote = {
+                      id: 'note-' + Date.now(),
+                      title: `${subject} Study Notes`,
+                      subject,
+                      content: `# ${subject} Study Notes\n\n- Key Theorems:\n- Principles:\n- Formulas & Examples:\n`,
+                      tags: [subject, 'FolderDeck'],
+                      isPinned: false,
+                      updatedAt: 'Just now',
+                    };
+                    handleSaveNotebookNote(newNote);
+                    setActiveNotebookNoteId(newNote.id);
+                    setCurrentView('my-notes');
+                  }}
+                />
+              )}
 
-          {currentView === 'doubt-solver' && (
-            <DoubtSolverView
-              doubts={doubts}
-              initialDoubt={activeDoubt}
-              onSaveDoubt={handleSaveDoubt}
-              onSaveToNotebook={handleExportToNotebook}
-            />
-          )}
+              {currentView === 'doubt-solver' && (
+                <DoubtSolverView
+                  doubts={doubts}
+                  initialDoubt={activeDoubt}
+                  onSaveDoubt={handleSaveDoubt}
+                  onSaveToNotebook={handleExportToNotebook}
+                />
+              )}
 
-          {currentView === 'ai-notes' && (
-            <AiNotesView
-              savedNotes={aiNotes}
-              initialNote={activeAiNote}
-              onSaveNote={handleSaveAiNote}
-              onExportToNotebook={handleExportToNotebook}
-            />
-          )}
+              {currentView === 'ai-notes' && (
+                <AiNotesView
+                  savedNotes={aiNotes}
+                  initialNote={activeAiNote}
+                  onSaveNote={handleSaveAiNote}
+                  onExportToNotebook={handleExportToNotebook}
+                />
+              )}
 
-          {currentView === 'news-paper' && (
-            <NewsPaperView
-              articles={mockNewsArticles}
-              selectedArticle={activeNewsArticle}
-              onSelectArticle={(art) => setActiveNewsArticle(art)}
-            />
-          )}
+              {currentView === 'news-paper' && (
+                <NewsPaperView
+                  articles={mockNewsArticles}
+                  selectedArticle={activeNewsArticle}
+                  onSelectArticle={(art) => setActiveNewsArticle(art)}
+                />
+              )}
 
-          {currentView === 'my-notes' && (
-            <MyNotesView
-              notes={notebookNotes}
-              initialActiveNoteId={activeNotebookNoteId}
-              onSaveNote={handleSaveNotebookNote}
-              onDeleteNote={handleDeleteNotebookNote}
-            />
-          )}
+              {currentView === 'my-notes' && (
+                <MyNotesView
+                  notes={notebookNotes}
+                  initialActiveNoteId={activeNotebookNoteId}
+                  onSaveNote={handleSaveNotebookNote}
+                  onDeleteNote={handleDeleteNotebookNote}
+                />
+              )}
 
-          {currentView === 'settings' && (
-            <SettingsView
-              user={currentUser}
-              onUpdateUser={(updated) => setCurrentUser(updated)}
-              onLogout={handleLogout}
-              onResetData={handleResetData}
-            />
-          )}
+              {currentView === 'settings' && (
+                <SettingsView
+                  user={currentUser}
+                  onUpdateUser={(updated) => setCurrentUser(updated)}
+                  onLogout={handleLogout}
+                  onResetData={handleResetData}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 

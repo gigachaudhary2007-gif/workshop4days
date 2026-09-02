@@ -3,11 +3,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   HelpCircle,
   Headphones,
-  FileText,
   Newspaper,
   BookOpen,
   X,
-  Sparkles
+  Sparkles,
 } from 'lucide-react';
 import { AppView } from '../../types';
 import { soundEffects } from '../../utils/soundEffects';
@@ -38,81 +37,70 @@ export const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
     {
       id: 'ai-notes' as AppView,
       label: 'Audio Lesson & Notes',
-      icon: <Headphones className="w-4 h-4 text-[#10E862]" />,
-      bg: 'bg-[#121915]',
-      border: 'border-[#222E26]',
-      text: 'text-white',
+      icon: <Headphones className="w-4 h-4 text-[#16835B]" />,
+      bg: 'bg-white/80 backdrop-blur-xl border-white/90 text-[#171A18]',
     },
     {
       id: 'doubt-solver' as AppView,
       label: 'Ask AI Doubt',
-      icon: <HelpCircle className="w-4 h-4 text-emerald-600" />,
-      bg: 'bg-white',
-      border: 'border-[#E1E5E1]',
-      text: 'text-[#171A18]',
+      icon: <HelpCircle className="w-4 h-4 text-[#16835B]" />,
+      bg: 'bg-white/80 backdrop-blur-xl border-white/90 text-[#171A18]',
     },
     {
       id: 'news-paper' as AppView,
       label: 'Daily News Paper',
-      icon: <Newspaper className="w-4 h-4 text-blue-600" />,
-      bg: 'bg-white',
-      border: 'border-[#E1E5E1]',
-      text: 'text-[#171A18]',
+      icon: <Newspaper className="w-4 h-4 text-[#16835B]" />,
+      bg: 'bg-white/80 backdrop-blur-xl border-white/90 text-[#171A18]',
     },
     {
       id: 'my-notes' as AppView,
       label: 'Digital Notebook',
-      icon: <BookOpen className="w-4 h-4 text-amber-600" />,
-      bg: 'bg-white',
-      border: 'border-[#E1E5E1]',
-      text: 'text-[#171A18]',
+      icon: <BookOpen className="w-4 h-4 text-[#16835B]" />,
+      bg: 'bg-white/80 backdrop-blur-xl border-white/90 text-[#171A18]',
     },
   ];
 
   return (
-    <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end pointer-events-none">
-      {/* Floating Staggered Action Items (From Video 2 template) */}
+    <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end pointer-events-none select-none">
+      {/* Floating Staggered Action Items (Liquid Glass Style) */}
       <AnimatePresence>
         {isOpen && (
           <div className="flex flex-col items-end gap-3 mb-3 pointer-events-auto">
             {menuItems.map((item, index) => (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, y: 20, scale: 0.7 }}
+                initial={{ opacity: 0, y: 16, scale: 0.8 }}
                 animate={{
                   opacity: 1,
                   y: 0,
                   scale: 1,
                   transition: {
                     type: 'spring',
-                    stiffness: 400,
+                    stiffness: 380,
                     damping: 24,
-                    delay: (menuItems.length - 1 - index) * 0.05,
+                    delay: (menuItems.length - 1 - index) * 0.04,
                   },
                 }}
                 exit={{
                   opacity: 0,
-                  y: 15,
-                  scale: 0.7,
+                  y: 12,
+                  scale: 0.8,
                   transition: { duration: 0.15 },
                 }}
                 className="flex items-center gap-2.5 group cursor-pointer"
                 onClick={() => handleAction(item.id)}
               >
-                {/* Tooltip Label */}
-                <motion.span
-                  whileHover={{ scale: 1.05 }}
-                  className="px-3 py-1.5 rounded-xl bg-[#171A18] text-white text-xs font-bold shadow-lg border border-[#2B342E] whitespace-nowrap opacity-90 group-hover:opacity-100"
-                >
+                {/* Tooltip Label in Translucent Glass */}
+                <span className="px-3.5 py-1.5 rounded-xl bg-white/90 backdrop-blur-xl text-[#171A18] text-xs font-bold shadow-[0_4px_20px_rgba(15,98,70,0.06)] border border-white/90 whitespace-nowrap">
                   {item.label}
-                </motion.span>
+                </span>
 
-                {/* Circular Action Button */}
+                {/* Circular Glass Action Bubble */}
                 <motion.button
                   type="button"
-                  whileHover={{ scale: 1.12 }}
+                  whileHover={{ scale: 1.12, y: -2 }}
                   whileTap={{ scale: 0.92 }}
-                  className={`w-11 h-11 rounded-full ${item.bg} ${item.border} border shadow-xl flex items-center justify-center cursor-pointer transition-transform`}
+                  className={`w-11 h-11 rounded-full ${item.bg} border shadow-[0_6px_20px_rgba(15,98,70,0.08)] flex items-center justify-center cursor-pointer transition-all hover:border-[#16835B]/40 hover:shadow-lg`}
                 >
                   {item.icon}
                 </motion.button>
@@ -122,37 +110,47 @@ export const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Main Floating Trigger Button (4 dots / grid icon that rotates into X like Video 2) */}
-      <motion.button
-        type="button"
-        onClick={toggleMenu}
-        whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.92 }}
-        className={`w-14 h-14 rounded-full shadow-2xl flex items-center justify-center cursor-pointer pointer-events-auto border transition-all ${
-          isOpen
-            ? 'bg-[#171A18] text-white border-[#2A342D]'
-            : 'bg-gradient-to-tr from-[#0F6246] to-[#16835B] text-white border-emerald-400/40 shadow-[0_8px_25px_rgba(22,131,91,0.4)]'
-        }`}
-        title={isOpen ? 'Close Quick Menu' : 'Open Study Action Menu'}
-      >
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ type: 'spring', stiffness: 350, damping: 22 }}
-          className="flex items-center justify-center"
+      {/* Main Floating Trigger Button: Liquid Glass AI Assistant with Breathing Animation */}
+      <div className="flex flex-col items-center pointer-events-auto">
+        <motion.button
+          type="button"
+          onClick={toggleMenu}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.94 }}
+          className={`relative w-14 h-14 rounded-full flex items-center justify-center cursor-pointer transition-all border ${
+            isOpen
+              ? 'bg-white/90 backdrop-blur-2xl text-[#171A18] border-white shadow-[0_12px_32px_rgba(15,98,70,0.12)]'
+              : 'bg-white/75 backdrop-blur-2xl text-[#16835B] border-white/90 shadow-[0_10px_32px_rgba(22,131,91,0.22)] animate-glass-breathe hover:bg-white/90 hover:border-emerald-300'
+          }`}
+          title={isOpen ? 'Close AI Assistant' : 'Open AI Assistant Menu'}
         >
-          {isOpen ? (
-            <X className="w-6 h-6 text-white" />
-          ) : (
-            /* 4-dot Grid Icon as shown in jitter.video template */
-            <div className="grid grid-cols-2 gap-1.5 w-5 h-5 items-center justify-center p-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-white shadow-xs" />
-              <span className="w-1.5 h-1.5 rounded-full bg-white shadow-xs" />
-              <span className="w-1.5 h-1.5 rounded-full bg-white shadow-xs" />
-              <span className="w-1.5 h-1.5 rounded-full bg-white shadow-xs" />
-            </div>
-          )}
-        </motion.div>
-      </motion.button>
+          {/* Liquid Glass Inner Refraction Highlight */}
+          <div
+            className="absolute inset-0 rounded-full pointer-events-none opacity-80"
+            style={{
+              background:
+                'radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.95) 0%, rgba(220, 239, 231, 0.4) 45%, transparent 70%)',
+            }}
+          />
+
+          <motion.div
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            transition={{ type: 'spring', stiffness: 350, damping: 22 }}
+            className="relative z-10 flex items-center justify-center"
+          >
+            {isOpen ? (
+              <X className="w-6 h-6 text-[#171A18]" />
+            ) : (
+              <Sparkles className="w-6 h-6 text-[#16835B] fill-emerald-500/25" />
+            )}
+          </motion.div>
+        </motion.button>
+
+        {/* Micro-label below button exactly as shown in the reference screenshot */}
+        <span className="text-[11px] font-bold text-[#5F6762] tracking-tight mt-1 px-2 py-0.5 rounded-md bg-white/60 backdrop-blur-md border border-white/80 shadow-2xs">
+          AI Assistant
+        </span>
+      </div>
     </div>
   );
 };
