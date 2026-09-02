@@ -87,7 +87,8 @@ export const DoubtSolverView: React.FC<DoubtSolverViewProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('Server returned error solving doubt');
+        const errPayload = await response.json().catch(() => ({}));
+        throw new Error(errPayload.error || errPayload.details || 'Server returned error solving doubt');
       }
 
       const data: DoubtSolution = await response.json();
@@ -107,7 +108,7 @@ export const DoubtSolverView: React.FC<DoubtSolverViewProps> = ({
       showToast('Doubt solved successfully with step-by-step guidance!');
     } catch (err: any) {
       console.error('Error solving doubt:', err);
-      showToast('Unable to connect to AI server. Please check your network or try again.', 'error');
+      showToast(err?.message || 'Unable to connect to AI server. Please check your network or try again.', 'error');
     } finally {
       setIsLoading(false);
     }

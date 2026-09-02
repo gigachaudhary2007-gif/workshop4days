@@ -11,6 +11,55 @@ export interface User {
   rememberMe?: boolean;
 }
 
+/**
+ * 1. User Profile Document Schema
+ */
+export interface UserProfileData {
+  userId: string;
+  name: string;
+  email: string;
+  createdAt: string;
+  avatar?: string;
+  gradeLevel?: string;
+  studyGoalHours?: number;
+  streakDays?: number;
+}
+
+/**
+ * 2. Notes Document Schema
+ */
+export interface NoteDocument {
+  noteId: string;
+  userId: string;
+  title: string;
+  content: string;
+  originalFileUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * 3. Doubts Document Schema
+ */
+export interface DoubtDocument {
+  doubtId: string;
+  userId: string;
+  question: string;
+  imageUrl?: string;
+  answer?: string;
+  createdAt: string;
+}
+
+/**
+ * 4. Study Activity Document Schema
+ */
+export interface StudyActivityDocument {
+  activityId: string;
+  userId: string;
+  date: string;
+  activityType: string;
+}
+
 export type AppView = 'home' | 'doubt-solver' | 'ai-notes' | 'news-paper' | 'my-notes' | 'settings';
 
 export interface StepSolution {

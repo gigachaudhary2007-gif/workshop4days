@@ -120,48 +120,82 @@ You MUST respond strictly with a valid JSON object matching this structure:
 
     contents.push({ text: promptText });
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
-      contents: { parts: contents },
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            mainContext: { type: Type.STRING },
-            mainPoints: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-            },
-            stepByStepSolution: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  stepNumber: { type: Type.INTEGER },
-                  title: { type: Type.STRING },
-                  explanation: { type: Type.STRING },
-                  mathOrCode: { type: Type.STRING },
-                },
-                required: ["stepNumber", "title", "explanation"],
-              },
-            },
-            finalAnswer: { type: Type.STRING },
-            quickSummary: { type: Type.STRING },
+    let responseText = "";
+    const generationConfig = {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          mainContext: { type: Type.STRING },
+          mainPoints: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
           },
-          required: [
-            "mainContext",
-            "mainPoints",
-            "stepByStepSolution",
-            "finalAnswer",
-            "quickSummary",
-          ],
+          stepByStepSolution: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                stepNumber: { type: Type.INTEGER },
+                title: { type: Type.STRING },
+                explanation: { type: Type.STRING },
+                mathOrCode: { type: Type.STRING },
+              },
+              required: ["stepNumber", "title", "explanation"],
+            },
+          },
+          finalAnswer: { type: Type.STRING },
+          quickSummary: { type: Type.STRING },
         },
+        required: [
+          "mainContext",
+          "mainPoints",
+          "stepByStepSolution",
+          "finalAnswer",
+          "quickSummary",
+        ],
       },
-    });
+    };
 
-    const text = response.text || "{}";
-    const parsed = JSON.parse(text);
+    // Primary model: gemini-3.8-flash; resilient fallbacks: gemini-3.1-flash-lite, gemini-flash-latest
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3.8-flash",
+        contents: { parts: contents },
+        config: generationConfig,
+      });
+      responseText = response.text || "";
+    } catch (primaryError: any) {
+      console.warn("Primary model error (e.g. 503 spike), attempting gemini-3.1-flash-lite fallback:", primaryError?.message);
+      try {
+        const fallbackResponse = await ai.models.generateContent({
+          model: "gemini-3.1-flash-lite",
+          contents: { parts: contents },
+          config: generationConfig,
+        });
+        responseText = fallbackResponse.text || "";
+      } catch (liteError: any) {
+        console.warn("Flash lite fallback error, attempting gemini-flash-latest:", liteError?.message);
+        const latestResponse = await ai.models.generateContent({
+          model: "gemini-flash-latest",
+          contents: { parts: contents },
+          config: generationConfig,
+        });
+        responseText = latestResponse.text || "";
+      }
+    }
+
+    if (!responseText) {
+      throw new Error("Empty response received from Gemini.");
+    }
+
+    const cleanedText = responseText
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```$/i, "")
+      .trim();
+
+    const parsed = JSON.parse(cleanedText);
     return res.json(parsed);
   } catch (error: any) {
     console.error("Error solving doubt:", error);
