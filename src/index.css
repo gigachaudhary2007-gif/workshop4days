@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #16835B;
+  --color-primary-deep: #0F6246;
+  --color-bg-main: #FAFAF8;
+  --color-bg-secondary: #F4F5F1;
+  --color-surface: #FFFFFF;
+  --color-surface-soft: #F8F9F6;
+  --color-text-primary: #171A18;
+  --color-text-secondary: #5F6762;
+  --color-text-muted: #89918C;
+  --color-border: #E1E5E1;
+}
+
+body {
+  background-color: #FAFAF8;
+  color: #171A18;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D5DAD5;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B4BCB5;
+}
+
+/* Glass panel utility */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid #E1E5E1;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid #E1E5E1;
+  box-shadow: 0 4px 20px -2px rgba(22, 131, 91, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+.glass-dropdown {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid #E1E5E1;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+}
+
