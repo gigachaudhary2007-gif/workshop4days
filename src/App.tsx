@@ -20,6 +20,7 @@ import { ToastProvider, useToast } from './components/ui/Toast';
 import { SoundProvider } from './context/SoundContext';
 import { FloatingActionMenu } from './components/ui/FloatingActionMenu';
 import { LiquidGlassBackground } from './components/ui/LiquidGlassBackground';
+import { AnimationPlacementPreview } from './components/preview/AnimationPlacementPreview';
 
 function AppContent() {
   const { showToast } = useToast();
@@ -30,8 +31,8 @@ function AppContent() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed && (parsed.name === 'Alex Chen' || !parsed.name)) {
-          parsed.name = 'Vishal Chaudhary';
+        if (parsed) {
+          parsed.name = 'Vishal Patel';
           parsed.email = 'gigachaudhary2007@gmail.com';
           localStorage.setItem('study_to_shine_user', JSON.stringify(parsed));
         }
@@ -43,7 +44,7 @@ function AppContent() {
     // Default demo user for instant preview experience
     return {
       id: 'usr_default',
-      name: 'Vishal Chaudhary',
+      name: 'Vishal Patel',
       email: 'gigachaudhary2007@gmail.com',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       gradeLevel: 'Grade 12 / AP Scholar',
@@ -192,6 +193,7 @@ function AppContent() {
         onLogout={handleLogout}
         isOpenMobile={mobileMenuOpen}
         onCloseMobile={() => setMobileMenuOpen(false)}
+        showAnimationPreview={true}
       />
 
       {/* Main Content Area */}
@@ -214,7 +216,7 @@ function AppContent() {
               transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
             >
               {currentView === 'home' && (
-                <HomeDashboard
+                <AnimationPlacementPreview
                   user={currentUser}
                   onNavigate={(view) => {
                     setCurrentView(view);
@@ -305,7 +307,7 @@ function AppContent() {
         </main>
       </div>
 
-      {/* Floating Action Menu (from Video 2 template) */}
+      {/* Floating Action Menu */}
       <FloatingActionMenu
         onNavigate={setCurrentView}
         currentView={currentView}
