@@ -37,60 +37,91 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
-// 1. Doubt Solver Endpoint
+// 1. Doubt Solver Endpoint (Connects to Gemini securely on the server)
 app.post("/api/doubt/solve", async (req, res) => {
   try {
-    const { question, subject, imageBase64, imageMimeType, documentText } = req.body;
+    const { question, subject, imageBase64, imageMimeType, documentText, userId } = req.body;
 
-    if (!question && !imageBase64 && !documentText) {
-      return res.status(400).json({ error: "Please provide a question, image, or document." });
+    const hasQuestion = typeof question === "string" && question.trim().length > 0;
+    const hasImage = typeof imageBase64 === "string" && imageBase64.length > 0;
+    const hasDoc = typeof documentText === "string" && documentText.trim().length > 0;
+
+    if (!hasQuestion && !hasImage && !hasDoc) {
+      return res.status(400).json({ error: "Please provide a question, an image, or study material to solve." });
     }
 
     const ai = getGeminiClient();
 
     if (!ai) {
-      // High-quality contextual fallback if API key is not yet set in environment
+      // High-quality contextual pedagogical fallback if GEMINI_API_KEY is not configured
       return res.json({
-        mainContext: `Context: ${subject || "Academic"} Doubt Analysis on "${question || "Uploaded Study Material"}"`,
+        mainContext: `Academic guidance for ${subject || "General Academic"} on "${question || "Uploaded Problem Diagram"}": Review fundamental definitions and identify core governing theorems.`,
         mainPoints: [
-          "Identified core subject theory and fundamental concepts involved.",
-          "Applied systematic deductive problem-solving methodology.",
-          "Verified conditions, edge constraints, and academic best practices.",
-          "Formulated clear step-by-step reasoning for student clarity."
+          "Identify all given variables, constants, and known conditions.",
+          "Apply the standard theorem or formula directly to the unknown target.",
+          "Check intermediate algebraic calculations and dimensional units.",
+          "Verify that the final result satisfies boundary and edge constraints."
         ],
         stepByStepSolution: [
           {
             stepNumber: 1,
-            title: "Understand the Problem & Identify Given Variables",
-            explanation: `Reviewing the inquiry (${question || "the attached problem"}), we first isolate all defined parameters and note the target unknown.`,
-            mathOrCode: "Target: Solve explicitly step-by-step with proofs."
+            title: "Problem Deconstruction & Given Parameters",
+            explanation: `Analyzing the problem (${question || "the attached question"}), we first list given parameters and isolate what needs to be determined.`,
+            mathOrCode: "Given: known parameters -> Target: required unknown"
           },
           {
             stepNumber: 2,
-            title: "Apply the Governing Theorems & Formulas",
-            explanation: "Select the appropriate academic formula or fundamental principle that connects given conditions to the solution.",
-            mathOrCode: "Formula/Principle: Standard curriculum theorem application."
+            title: "Governing Formula & Principle Application",
+            explanation: "Apply the standard curriculum formula connecting the known values to the target unknown.",
+            mathOrCode: "Principle: Standard curriculum theorem"
           },
           {
             stepNumber: 3,
-            title: "Compute and Verify Steps",
-            explanation: "Substitute values systematically, simplifying intermediate algebraic or conceptual expressions to avoid common student pitfalls.",
-            mathOrCode: "Verification: Both LHS and RHS consistency checked."
+            title: "Substitution & Systematic Calculation",
+            explanation: "Substitute the numerical or symbolic values into the formula and solve step-by-step.",
+            mathOrCode: "Result derived via step-by-step algebraic simplification"
           }
         ],
-        finalAnswer: `The comprehensive solution to "${question || "this doubt"}" is derived through the systematic application of standard academic principles. Ensure all units and final conditions are verified.`,
-        quickSummary: "Break down the question into knowns and unknowns, choose the standard theorem, execute systematic substitution, and check boundary conditions."
+        finalAnswer: `The systematic solution for "${question || "this doubt"}" is derived using core curriculum principles.`,
+        quickSummary: "Identify knowns and unknowns, apply standard formulas, verify units, and review intermediate steps."
       });
     }
 
     const contents: any[] = [];
 
-    let promptText = `You are "Study to Shine", an expert, friendly, and pedagogically brilliant student mentor and tutor.
+    // Process image if uploaded (multimodal Gemini input)
+    if (hasImage) {
+      let detectedMime = imageMimeType;
+      if (!detectedMime && imageBase64.startsWith("data:")) {
+        const match = imageBase64.match(/^data:([^;]+);base64,/);
+        if (match) {
+          detectedMime = match[1];
+        }
+      }
+      detectedMime = detectedMime || "image/jpeg";
+
+      const cleanBase64 = imageBase64
+        .replace(/^data:[a-zA-Z0-9\/\+\-]+;base64,/, "")
+        .trim();
+
+      if (cleanBase64) {
+        contents.push({
+          inlineData: {
+            mimeType: detectedMime,
+            data: cleanBase64,
+          },
+        });
+      }
+    }
+
+    // Pedagogical Socratic prompt for Gemini
+    const promptText = `You are "Study to Shine", an expert, friendly, and pedagogically brilliant student mentor and tutor.
 A student has asked a doubt. Please provide an easy-to-understand, encouraging, highly structured response for this student.
 
 Subject/Topic: ${subject || "General Academic"}
-Student's Question: ${question || "(Refer to the attached image or document)"}
-${documentText ? `Attached Document Excerpt:\n${documentText}\n` : ""}
+${hasQuestion ? `Student's Question: ${question.trim()}` : ""}
+${hasImage ? `\n[Image Attached]: The student uploaded an image of their academic question or textbook problem. Carefully examine all text, equations, diagrams, labels, and handwriting in the image, determine the exact problem, and explain and solve it completely.` : ""}
+${hasDoc ? `\nAttached Document Excerpt:\n${documentText.trim()}\n` : ""}
 
 You MUST respond strictly with a valid JSON object matching this structure:
 {
@@ -109,18 +140,8 @@ You MUST respond strictly with a valid JSON object matching this structure:
 }
 `;
 
-    if (imageBase64) {
-      contents.push({
-        inlineData: {
-          mimeType: imageMimeType || "image/jpeg",
-          data: imageBase64.replace(/^data:[a-zA-Z0-9\/\+\-]+;base64,/, ""),
-        },
-      });
-    }
-
     contents.push({ text: promptText });
 
-    let responseText = "";
     const generationConfig = {
       responseMimeType: "application/json",
       responseSchema: {
@@ -157,36 +178,31 @@ You MUST respond strictly with a valid JSON object matching this structure:
       },
     };
 
-    // Primary model: gemini-3.8-flash; resilient fallbacks: gemini-3.1-flash-lite, gemini-flash-latest
-    try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
-        contents: { parts: contents },
-        config: generationConfig,
-      });
-      responseText = response.text || "";
-    } catch (primaryError: any) {
-      console.warn("Primary model error (e.g. 503 spike), attempting gemini-3.1-flash-lite fallback:", primaryError?.message);
+    // Resilient model cascade: try primary gemini-3.8-flash -> gemini-flash-latest -> gemini-3.1-flash-lite
+    const modelsToTry = ["gemini-3.8-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
+    let responseText = "";
+    let lastError: any = null;
+
+    for (const model of modelsToTry) {
       try {
-        const fallbackResponse = await ai.models.generateContent({
-          model: "gemini-3.1-flash-lite",
+        const response = await ai.models.generateContent({
+          model,
           contents: { parts: contents },
           config: generationConfig,
         });
-        responseText = fallbackResponse.text || "";
-      } catch (liteError: any) {
-        console.warn("Flash lite fallback error, attempting gemini-flash-latest:", liteError?.message);
-        const latestResponse = await ai.models.generateContent({
-          model: "gemini-flash-latest",
-          contents: { parts: contents },
-          config: generationConfig,
-        });
-        responseText = latestResponse.text || "";
+
+        if (response && response.text) {
+          responseText = response.text;
+          break;
+        }
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`Model ${model} request did not complete, trying next model in cascade:`, err?.message || err);
       }
     }
 
     if (!responseText) {
-      throw new Error("Empty response received from Gemini.");
+      throw new Error(lastError?.message || "Empty response received from Gemini.");
     }
 
     const cleanedText = responseText
@@ -195,7 +211,18 @@ You MUST respond strictly with a valid JSON object matching this structure:
       .replace(/```$/i, "")
       .trim();
 
-    const parsed = JSON.parse(cleanedText);
+    let parsed: any = null;
+    try {
+      parsed = JSON.parse(cleanedText);
+    } catch {
+      const match = responseText.match(/\{[\s\S]*\}/);
+      if (match) {
+        parsed = JSON.parse(match[0]);
+      } else {
+        throw new Error("Could not parse JSON response from Gemini.");
+      }
+    }
+
     return res.json(parsed);
   } catch (error: any) {
     console.error("Error solving doubt:", error);

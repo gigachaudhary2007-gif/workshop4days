@@ -20,8 +20,8 @@ import { ToastProvider, useToast } from './components/ui/Toast';
 import { SoundProvider } from './context/SoundContext';
 import { FloatingActionMenu } from './components/ui/FloatingActionMenu';
 import { LiquidGlassBackground } from './components/ui/LiquidGlassBackground';
-import { AnimationPlacementPreview } from './components/preview/AnimationPlacementPreview';
 import { onAuthUserChanged, logoutUser, updateUserProfile } from './services/authService';
+import { createDoubt } from './services/databaseService';
 
 function AppContent() {
   const { showToast } = useToast();
@@ -95,9 +95,25 @@ function AppContent() {
     }
   }, [currentUser]);
 
+  // User-isolated doubts state & persistence
   useEffect(() => {
-    localStorage.setItem('sts_doubts', JSON.stringify(doubts));
-  }, [doubts]);
+    const userDoubtKey = currentUser?.id ? `sts_doubts_${currentUser.id}` : 'sts_doubts_guest';
+    const saved = localStorage.getItem(userDoubtKey);
+    if (saved) {
+      try {
+        setDoubts(JSON.parse(saved));
+      } catch {
+        setDoubts(initialDoubts);
+      }
+    } else {
+      setDoubts(initialDoubts);
+    }
+  }, [currentUser?.id]);
+
+  useEffect(() => {
+    const userDoubtKey = currentUser?.id ? `sts_doubts_${currentUser.id}` : 'sts_doubts_guest';
+    localStorage.setItem(userDoubtKey, JSON.stringify(doubts));
+  }, [doubts, currentUser?.id]);
 
   useEffect(() => {
     localStorage.setItem('sts_ai_notes', JSON.stringify(aiNotes));
@@ -139,8 +155,21 @@ function AppContent() {
     showToast('Session reset to initial demo data');
   };
 
-  const handleSaveDoubt = (newDoubt: DoubtRecord) => {
+  const handleSaveDoubt = async (newDoubt: DoubtRecord) => {
     setDoubts((prev) => [newDoubt, ...prev.filter((d) => d.id !== newDoubt.id)]);
+
+    if (currentUser?.id) {
+      try {
+        await createDoubt(currentUser.id, {
+          doubtId: newDoubt.id,
+          question: newDoubt.question,
+          imageUrl: newDoubt.attachmentName || '',
+          answer: newDoubt.solution ? newDoubt.solution.finalAnswer : '',
+        });
+      } catch (err) {
+        console.warn('Could not sync doubt to isolated Firestore:', err);
+      }
+    }
   };
 
   const handleSaveAiNote = (newNote: AnalyzedNoteRecord) => {
@@ -224,7 +253,7 @@ function AppContent() {
               transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
             >
               {currentView === 'home' && (
-                <AnimationPlacementPreview
+                <HomeDashboard
                   user={currentUser}
                   onNavigate={(view) => {
                     setCurrentView(view);
