@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   HelpCircle,
   FileText,
@@ -12,11 +12,18 @@ import {
   ChevronRight,
   TrendingUp,
   Bookmark,
-  Compass
+  Compass,
+  FolderKanban,
 } from 'lucide-react';
+import { motion } from 'motion/react';
 import { AppView, User, DoubtRecord, AnalyzedNoteRecord, NewsArticle, StudentNotebookNote } from '../../types';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
+import { InteractiveStudyFolder, StudyFolderData } from '../ui/InteractiveStudyFolder';
+import { StudyFolderModal } from '../notebook/StudyFolderModal';
+import { SegmentedControl } from '../ui/SegmentedControl';
+import { MorphingButton } from '../ui/MorphingButton';
+import { useSound } from '../../context/SoundContext';
 
 interface HomeDashboardProps {
   user: User;
@@ -28,6 +35,8 @@ interface HomeDashboardProps {
   onOpenDoubt: (doubt: DoubtRecord) => void;
   onOpenNote: (note: AnalyzedNoteRecord) => void;
   onOpenArticle: (article: NewsArticle) => void;
+  onOpenNotebookNote?: (note: StudentNotebookNote) => void;
+  onCreateNoteInSubject?: (subject: string) => void;
 }
 
 export const HomeDashboard: React.FC<HomeDashboardProps> = ({
@@ -40,6 +49,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   onOpenDoubt,
   onOpenNote,
   onOpenArticle,
+  onOpenNotebookNote,
+  onCreateNoteInSubject,
 }) => {
   // Time-aware greeting
   const getGreeting = () => {
@@ -85,6 +96,49 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       badge: 'Digital Canvas',
       color: 'bg-[#F4F5F1] text-[#171A18] border-[#E1E5E1]',
       actionText: 'Open Notebook',
+    },
+  ];
+
+  // Folders matching video aesthetic & micro-interactions
+  const [selectedFolderForModal, setSelectedFolderForModal] = useState<StudyFolderData | null>(null);
+  const [recentActivityTab, setRecentActivityTab] = useState<'all' | 'doubts' | 'notes'>('all');
+
+  const studyFolders: StudyFolderData[] = [
+    {
+      id: 'folder-physics',
+      name: 'AP Physics & Mechanics',
+      subject: 'Physics',
+      description: 'Kinematics, rotational dynamics, momentum conservation & harmonic motion.',
+      theme: 'lime', // matches electric lime card in video with the circular plus button!
+      noteCount: notebookNotes.filter((n) => n.subject === 'Physics').length || 4,
+      recentTopics: ['Rotational Torque', 'Newtonian Gravity', 'Oscillations'],
+    },
+    {
+      id: 'folder-chemistry',
+      name: 'Organic Chemistry & Biomolecules',
+      subject: 'Chemistry',
+      description: 'Reaction mechanisms, SN1/SN2 pathways, chirality & enzyme kinetics.',
+      theme: 'violet', // matches the royal purple card in video with the rotating multi-card fan!
+      noteCount: notebookNotes.filter((n) => n.subject === 'Chemistry').length || 6,
+      recentTopics: ['Nucleophiles', 'Carbonyl Additions', 'Thermodynamics'],
+    },
+    {
+      id: 'folder-calculus',
+      name: 'Advanced Calculus & Limits',
+      subject: 'Mathematics',
+      description: 'Taylor series approximations, multivariable gradients, and double integrals.',
+      theme: 'emerald',
+      noteCount: notebookNotes.filter((n) => n.subject === 'Mathematics').length || 8,
+      recentTopics: ['L\'Hôpital Rule', 'Partial Derivatives', 'Vector Fields'],
+    },
+    {
+      id: 'folder-history',
+      name: 'World History & Modern Civics',
+      subject: 'General',
+      description: 'Constitutional jurisprudence, macroeconomic shifts & geopolitical treaties.',
+      theme: 'dark',
+      noteCount: notebookNotes.filter((n) => n.subject === 'General' || n.subject === 'History').length || 3,
+      recentTopics: ['Treaty of Versailles', 'Federal Reserve', 'Enlightenment'],
     },
   ];
 
@@ -174,6 +228,50 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </div>
             </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Interactive Study Folders (Styled & Animated directly as in user video) */}
+      <section className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#10E862] animate-pulse" />
+              <h2 className="text-lg sm:text-xl font-extrabold text-[#171A18] tracking-tight">
+                Interactive Study Folders
+              </h2>
+            </div>
+            <p className="text-xs text-[#5F6762] mt-0.5 font-medium">
+              Click any folder to open its study deck, fan out note sheets, or spin the action button.
+            </p>
+          </div>
+
+          <button
+            onClick={() => onNavigate('my-notes')}
+            className="text-xs font-bold text-[#16835B] hover:text-[#0F6246] flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+          >
+            <span>Open All in Notebook</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* 2x2 or 4-col responsive Folder cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          {studyFolders.map((folder) => (
+            <InteractiveStudyFolder
+              key={folder.id}
+              folder={folder}
+              notes={notebookNotes}
+              onOpenFolder={(f) => setSelectedFolderForModal(f)}
+              onQuickAdd={(f) => {
+                if (onCreateNoteInSubject) {
+                  onCreateNoteInSubject(f.subject);
+                } else {
+                  setSelectedFolderForModal(f);
+                }
+              }}
+            />
           ))}
         </div>
       </section>
@@ -382,6 +480,30 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Study Folder Modal Explorer */}
+      <StudyFolderModal
+        folder={selectedFolderForModal}
+        notes={notebookNotes}
+        isOpen={Boolean(selectedFolderForModal)}
+        onClose={() => setSelectedFolderForModal(null)}
+        onSelectNote={(note) => {
+          setSelectedFolderForModal(null);
+          if (onOpenNotebookNote) {
+            onOpenNotebookNote(note);
+          } else {
+            onNavigate('my-notes');
+          }
+        }}
+        onCreateNoteInFolder={(folderName, subject) => {
+          setSelectedFolderForModal(null);
+          if (onCreateNoteInSubject) {
+            onCreateNoteInSubject(subject);
+          } else {
+            onNavigate('my-notes');
+          }
+        }}
+      />
     </div>
   );
 };

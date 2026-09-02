@@ -28,21 +28,35 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Modal } from '../ui/Modal';
 import { useToast } from '../ui/Toast';
+import { SegmentedControl } from '../ui/SegmentedControl';
+import { InteractiveStudyFolder, StudyFolderData } from '../ui/InteractiveStudyFolder';
+import { StudyFolderModal } from './StudyFolderModal';
+import { soundEffects } from '../../utils/soundEffects';
 
 interface MyNotesViewProps {
   notes: StudentNotebookNote[];
   onSaveNote: (note: StudentNotebookNote) => void;
   onDeleteNote: (id: string) => void;
+  initialActiveNoteId?: string | null;
 }
 
 export const MyNotesView: React.FC<MyNotesViewProps> = ({
   notes,
   onSaveNote,
   onDeleteNote,
+  initialActiveNoteId,
 }) => {
   const { showToast } = useToast();
 
-  const [activeNoteId, setActiveNoteId] = useState<string>(notes[0]?.id || '');
+  const [activeNoteId, setActiveNoteId] = useState<string>(initialActiveNoteId || notes[0]?.id || '');
+  const [viewMode, setViewMode] = useState<'editor' | 'folders'>('editor');
+  const [selectedFolderForModal, setSelectedFolderForModal] = useState<StudyFolderData | null>(null);
+
+  useEffect(() => {
+    if (initialActiveNoteId) {
+      setActiveNoteId(initialActiveNoteId);
+    }
+  }, [initialActiveNoteId]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState('All');
   const [isEditing, setIsEditing] = useState(false);
@@ -82,6 +96,45 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
   }, [activeNoteId]);
 
   const subjects = ['All', 'Mathematics', 'Physics', 'Biology', 'Chemistry', 'Computer Science', 'General'];
+
+  const studyFolders: StudyFolderData[] = [
+    {
+      id: 'folder-physics',
+      name: 'AP Physics & Mechanics',
+      subject: 'Physics',
+      description: 'Kinematics, rotational dynamics, momentum conservation & harmonic motion.',
+      theme: 'lime',
+      noteCount: notes.filter((n) => n.subject === 'Physics').length,
+      recentTopics: ['Rotational Torque', 'Newtonian Gravity', 'Oscillations'],
+    },
+    {
+      id: 'folder-chemistry',
+      name: 'Organic Chemistry & Biomolecules',
+      subject: 'Chemistry',
+      description: 'Reaction mechanisms, SN1/SN2 pathways, chirality & enzyme kinetics.',
+      theme: 'violet',
+      noteCount: notes.filter((n) => n.subject === 'Chemistry').length,
+      recentTopics: ['Nucleophiles', 'Carbonyl Additions', 'Thermodynamics'],
+    },
+    {
+      id: 'folder-calculus',
+      name: 'Advanced Calculus & Limits',
+      subject: 'Mathematics',
+      description: 'Taylor series approximations, multivariable gradients, and double integrals.',
+      theme: 'emerald',
+      noteCount: notes.filter((n) => n.subject === 'Mathematics').length,
+      recentTopics: ['L\'Hôpital Rule', 'Partial Derivatives', 'Vector Fields'],
+    },
+    {
+      id: 'folder-history',
+      name: 'World History & Modern Civics',
+      subject: 'General',
+      description: 'Constitutional jurisprudence, macroeconomic shifts & geopolitical treaties.',
+      theme: 'dark',
+      noteCount: notes.filter((n) => n.subject === 'General' || n.subject === 'History').length,
+      recentTopics: ['Treaty of Versailles', 'Federal Reserve', 'Enlightenment'],
+    },
+  ];
 
   // Filter notes
   const filteredNotes = notes.filter((n) => {
@@ -304,7 +357,19 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <SegmentedControl
+            options={[
+              { value: 'editor', label: 'Notebook Editor' },
+              { value: 'folders', label: 'Study Folders (3D)' },
+            ]}
+            value={viewMode}
+            onChange={(val) => {
+              soundEffects.playTabSwitch();
+              setViewMode(val);
+            }}
+          />
+
           <Button
             size="sm"
             onClick={handleCreateNewNote}
@@ -315,8 +380,42 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
         </div>
       </div>
 
-      {/* Main Split Layout: Left Notes List (4 Cols) + Right Editor / Viewer (8 Cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* Conditionally Render: Folder Decks View or Standard Split Editor */}
+      {viewMode === 'folders' ? (
+        <div className="space-y-6">
+          <div className="bg-white p-5 rounded-2xl border border-[#E1E5E1] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-bold text-[#171A18]">
+                Interactive Course Decks & Animated Folders
+              </h2>
+              <p className="text-xs text-[#5F6762] mt-0.5">
+                Hover to fan out study cards, spin the add buttons, or click a folder to explore its contents.
+              </p>
+            </div>
+            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 text-[#16835B] border border-emerald-200 self-start sm:self-auto">
+              {notes.length} Total Notes Organized
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {studyFolders.map((folder) => (
+              <InteractiveStudyFolder
+                key={folder.id}
+                folder={folder}
+                notes={notes}
+                onOpenFolder={(f) => setSelectedFolderForModal(f)}
+                onQuickAdd={(f) => {
+                  setSelectedSubjectFilter(f.subject);
+                  handleCreateNewNote();
+                  setViewMode('editor');
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        /* Main Split Layout: Left Notes List (4 Cols) + Right Editor / Viewer (8 Cols) */
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Sidebar: Notes Directory */}
         <div className="lg:col-span-4 space-y-4">
           <div className="bg-white rounded-2xl border border-[#E1E5E1] p-4 shadow-2xs space-y-3">
@@ -593,6 +692,26 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
           )}
         </div>
       </div>
+      )}
+
+      {/* Study Folder Modal Explorer */}
+      <StudyFolderModal
+        folder={selectedFolderForModal}
+        notes={notes}
+        isOpen={Boolean(selectedFolderForModal)}
+        onClose={() => setSelectedFolderForModal(null)}
+        onSelectNote={(n) => {
+          setActiveNoteId(n.id);
+          setViewMode('editor');
+          setSelectedFolderForModal(null);
+        }}
+        onCreateNoteInFolder={(folderName, subject) => {
+          setSelectedSubjectFilter(subject);
+          handleCreateNewNote();
+          setViewMode('editor');
+          setSelectedFolderForModal(null);
+        }}
+      />
 
       {/* Visual Drawing / Diagram Modal */}
       <Modal

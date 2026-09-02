@@ -11,7 +11,9 @@ import {
   ChevronRight,
   Flame
 } from 'lucide-react';
+import { motion } from 'motion/react';
 import { AppView, User } from '../../types';
+import { soundEffects } from '../../utils/soundEffects';
 
 interface SidebarProps {
   currentView: AppView;
@@ -68,6 +70,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const handleItemClick = (view: AppView) => {
+    if (view !== currentView) {
+      soundEffects.playWhoosh();
+    } else {
+      soundEffects.playPop();
+    }
     onNavigate(view);
     if (onCloseMobile) onCloseMobile();
   };

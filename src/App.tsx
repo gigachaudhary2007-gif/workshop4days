@@ -16,6 +16,7 @@ import { NewsPaperView } from './components/news/NewsPaperView';
 import { MyNotesView } from './components/notebook/MyNotesView';
 import { SettingsView } from './components/settings/SettingsView';
 import { ToastProvider, useToast } from './components/ui/Toast';
+import { SoundProvider } from './context/SoundContext';
 
 function AppContent() {
   const { showToast } = useToast();
@@ -89,6 +90,7 @@ function AppContent() {
   const [activeDoubt, setActiveDoubt] = useState<DoubtRecord | null>(null);
   const [activeAiNote, setActiveAiNote] = useState<AnalyzedNoteRecord | null>(null);
   const [activeNewsArticle, setActiveNewsArticle] = useState<NewsArticle | null>(null);
+  const [activeNotebookNoteId, setActiveNotebookNoteId] = useState<string | null>(null);
 
   // Sync to localStorage
   useEffect(() => {
@@ -214,6 +216,24 @@ function AppContent() {
                 setActiveNewsArticle(a);
                 setCurrentView('news-paper');
               }}
+              onOpenNotebookNote={(note) => {
+                setActiveNotebookNoteId(note.id);
+                setCurrentView('my-notes');
+              }}
+              onCreateNoteInSubject={(subject) => {
+                const newNote: StudentNotebookNote = {
+                  id: 'note-' + Date.now(),
+                  title: `${subject} Study Notes`,
+                  subject,
+                  content: `# ${subject} Study Notes\n\n- Key Theorems:\n- Principles:\n- Formulas & Examples:\n`,
+                  tags: [subject, 'FolderDeck'],
+                  isPinned: false,
+                  updatedAt: 'Just now',
+                };
+                handleSaveNotebookNote(newNote);
+                setActiveNotebookNoteId(newNote.id);
+                setCurrentView('my-notes');
+              }}
             />
           )}
 
@@ -246,6 +266,7 @@ function AppContent() {
           {currentView === 'my-notes' && (
             <MyNotesView
               notes={notebookNotes}
+              initialActiveNoteId={activeNotebookNoteId}
               onSaveNote={handleSaveNotebookNote}
               onDeleteNote={handleDeleteNotebookNote}
             />
@@ -267,8 +288,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ToastProvider>
-      <AppContent />
-    </ToastProvider>
+    <SoundProvider>
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
+    </SoundProvider>
   );
 }

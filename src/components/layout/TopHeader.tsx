@@ -2,6 +2,7 @@ import React from 'react';
 import { Menu, Search, Sparkles, Flame, Plus, Bell } from 'lucide-react';
 import { AppView, User } from '../../types';
 import { Button } from '../ui/Button';
+import { AudioFeedbackButton } from '../ui/AudioFeedbackButton';
 
 interface TopHeaderProps {
   currentView: AppView;
@@ -63,6 +64,9 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
 
         {/* Right Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Audio Feedback Sound Toggle (From video micro-interactions) */}
+          <AudioFeedbackButton />
+
           {/* Quick Solve Doubt CTA if not already on Doubt Solver */}
           {currentView !== 'doubt-solver' && (
             <Button
