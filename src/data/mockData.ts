@@ -180,7 +180,19 @@ export const INITIAL_NEWS: NewsArticle[] = [
       'For high school and university STEM students, this breakthrough directly validates theoretical predictions in condensed matter physics that were previously only explored computationally. The technology promises near-zero energy transmission loss and ultra-compact particle accelerators.'
     ],
     studentTakeaway: 'Understanding electronic band structures and lattice strain is becoming essential for future materials science and energy engineering careers.',
-    quizPrompt: 'What phenomenon causes electrons to pair up without electrical resistance in a superconductor?'
+    quizPrompt: 'What phenomenon causes electrons to pair up without electrical resistance in a superconductor?',
+    hindi: {
+      title: 'निकलेट सुपरलैटिस में वैज्ञानिकों ने की कमरे के तापमान के करीब सुपरकंडक्टिविटी की पुष्टि',
+      category: 'विज्ञान और प्रौद्योगिकी',
+      summary: 'विश्वविद्यालय भौतिकी प्रयोगशालाओं के एक संघ ने सिंथेटिक निकलेट सुपरलैटिस में कम दबाव वाले सुपरकंडक्टिविटी का सत्यापन किया है, जिसके पावर ग्रिड और क्वांटम प्रोसेसर के लिए क्रांतिकारी परिणाम होंगे।',
+      content: [
+        'भौतिकविदों द्वारा इसे इस दशक के सबसे रोमांचक प्रयोगों में से एक बताया जा रहा है। शोधकर्ताओं ने कमरे के तापमान के करीब स्तरित निकलेट संरचनाओं में शून्य विद्युत प्रतिरोध दर्ज किया है।',
+        'अत्यधिक उच्च दबाव वाले पुराने प्रयोगों के विपरीत, यह नई पतली फिल्म सामान्य परिवेश के दबाव पर भी कूपर-जोड़ी स्थिरता बनाए रखती है।',
+        'विज्ञान और इंजीनियरिंग के छात्रों के लिए यह खोज कंडेंस्ड मैटर फिजिक्स में सैद्धांतिक भविष्यवाणियों को सीधे प्रमाणित करती है। यह तकनीक शून्य ऊर्जा ट्रांसमिशन हानि और बेहद छोटे पार्टिकल त्वरक बनाने की दिशा खोलती है।'
+      ],
+      studentTakeaway: 'इलेक्ट्रॉनिक बैंड संरचनाओं और लैटिस स्ट्रेन को समझना भविष्य के मैटेरियल्स साइंस और एनर्जी इंजीनियरिंग करियर के लिए बेहद महत्वपूर्ण हो रहा है।',
+      quizPrompt: 'सुपरकंडक्टर में बिना विद्युत प्रतिरोध के इलेक्ट्रॉनों की जोड़ी बनाने वाली परिघटना को क्या कहा जाता है?'
+    }
   },
   {
     id: 'news-2',
@@ -196,7 +208,19 @@ export const INITIAL_NEWS: NewsArticle[] = [
       'Student space clubs and collegiate robotics teams are invited to participate in the upcoming Lunar Excavator and In-Situ Resource Utilization (ISRU) Design Challenge launched alongside the discovery.'
     ],
     studentTakeaway: 'In-situ resource utilization (ISRU) drastically reduces launch payloads, making multi-planetary exploration economically and logistically feasible.',
-    quizPrompt: 'Which chemical process will astronauts use to split lunar water into breathable oxygen and rocket fuel?'
+    quizPrompt: 'Which chemical process will astronauts use to split lunar water into breathable oxygen and rocket fuel?',
+    hindi: {
+      title: 'नासा और ईएसए ने चंद्रमा के दक्षिणी ध्रुव पर जल-बर्फ का सटीक नक्शा पूरा किया',
+      category: 'अंतरिक्ष विज्ञान',
+      summary: 'चंद्र ध्रुवीय ऑर्बिटर्स की हाई-रिज़ॉल्यूशन रडार इमेजिंग ने चंद्रमा के दक्षिणी ध्रुव के क्रेटरों में विशाल जल-बर्फ के भंडारों का पता लगाया है, जिससे स्थायी मानव आवास की योजना को बल मिला है।',
+      content: [
+        'लूनर रीकॉनेसेंस टीम ने अंतर्राष्ट्रीय अंतरिक्ष एजेंसियों के साथ मिलकर ध्रुवीय जल-बर्फ का सबसे विस्तृत भौगोलिक एटलस जारी किया है। नक्शे से पता चलता है कि सतह की मिट्टी के 1.5 मीटर के भीतर आसानी से उपलब्ध बर्फ मौजूद है।',
+        'यह भंडार अंतरिक्ष यात्रियों के लिए पीने का पानी, इलेक्ट्रोलिसिस के ज़रिए ऑक्सीजन और मंगल अभियानों के लिए लिक्विड हाइड्रोजन-ऑक्सीजन रॉकेट ईंधन प्रदान करेगा।',
+        'विद्यार्थियों और कॉलेज रोबोटिक्स टीमों को इस खोज के साथ शुरू की गई लूनर एक्सकेवेटर और इन-सीटू रिसोर्स यूटिलाइज़ेशन (ISRU) डिज़ाइन प्रतियोगिता में आमंत्रित किया गया है।'
+      ],
+      studentTakeaway: 'इन-सीटू रिसोर्स यूटिलाइज़ेशन (ISRU) पृथ्वी से ले जाने वाले पेलोड को भारी मात्रा में कम करता है, जिससे अंतरग्रहीय मिशन व्यावहारिक बनते हैं।',
+      quizPrompt: 'चाँद के पानी को सांस लेने योग्य ऑक्सीजन और रॉकेट ईंधन में विभाजित करने के लिए अंतरिक्ष यात्री किस रासायनिक प्रक्रिया का उपयोग करेंगे?'
+    }
   },
   {
     id: 'news-3',
@@ -212,7 +236,19 @@ export const INITIAL_NEWS: NewsArticle[] = [
       'The study also highlighted the vital role of human mentors and classroom discussions in synthesizing creative debate and ethical decision-making that complement AI study companions.'
     ],
     studentTakeaway: 'Active recall and Socratic dialogue build permanent neural pathways far faster than passive memorization.',
-    quizPrompt: 'How does the Socratic method differ from rote memorization?'
+    quizPrompt: 'How does the Socratic method differ from rote memorization?',
+    hindi: {
+      title: 'नेक्स्ट-जेनरेशन रीजनिंग एआई सुकराती संवाद से छात्रों को व्यक्तिगत मार्गदर्शन दे रहा है',
+      category: 'एआई और प्रौद्योगिकी',
+      summary: '50 स्कूल जिलों के शोध से पता चला है कि सीधे उत्तर देने के बजाय सुकराती सवालों के ज़रिए मार्गदर्शन करने वाले एआई ट्यूटर्स कैलकुलस और भौतिकी में छात्रों की समझ को दोगुना करते हैं।',
+      content: [
+        '25,000 से अधिक छात्रों पर 18 महीने तक किए गए अध्ययन से स्पष्ट हुआ है कि जब एआई मेंटर्स छात्रों से चरण-दर-चरण अपने तर्क स्पष्ट करवाते हैं, तो परीक्षा प्रदर्शन में 22% का सुधार होता है।',
+        'शोधकर्ताओं का कहना है कि शिक्षा में आधुनिक एआई का लक्ष्य केवल उत्तर देना नहीं बल्कि छात्रों के सोचने की क्षमता को बढ़ाना और उन्हें शोधकर्ताओं की तरह सोचना सिखाना है।',
+        'अध्ययन में यह भी बताया गया कि शिक्षकों की व्यक्तिगत भूमिका और कक्षा में रचनात्मक चर्चाएं एआई अध्ययन साथी के साथ मिलकर सर्वोत्तम परिणाम देती हैं।'
+      ],
+      studentTakeaway: 'एक्टिव रिकॉल और सुकराती संवाद केवल रटने की तुलना में मस्तिष्क में अधिक मजबूत न्यूरल कनेक्शन बनाते हैं।',
+      quizPrompt: 'सुकराती (Socratic) शिक्षण पद्धति पारंपरिक रटने से किस प्रकार भिन्न है?'
+    }
   },
   {
     id: 'news-4',
@@ -228,7 +264,19 @@ export const INITIAL_NEWS: NewsArticle[] = [
       'Early bird review closes November 15, 2026. Applicants must submit a 5-page research abstract, problem statement, and experimental design prototype.'
     ],
     studentTakeaway: 'Participation in international research olympiads builds invaluable portfolio experience and direct mentorship networks.',
-    quizPrompt: 'What key section of a scientific research paper outlines the experimental procedure and variable controls?'
+    quizPrompt: 'What key section of a scientific research paper outlines the experimental procedure and variable controls?',
+    hindi: {
+      title: 'ग्लोबल यूथ साइंस एंड इनोवेशन ओलंपियाड 2026 के पंजीकरण शुरू, मिलेंगे $2M के रिसर्च ग्रांट्स',
+      category: 'अवसर और छात्रवृत्तियां',
+      summary: 'दुनिया भर के हाई स्कूल और अंडरग्रेजुएट छात्र स्वच्छ ऊर्जा, बायोटेक्नोलॉजी, क्लाइमेट इंजीनियरिंग और गणित में रिसर्च प्रोजेक्ट्स के लिए ग्रांट हेतु आवेदन कर सकते हैं।',
+      content: [
+        'इंटरनेशनल यूथ साइंस फाउंडेशन ने 2026 ग्लोबल ओलंपियाड के लिए आवेदन पोर्टल खोल दिया है। फाइनलिस्ट्स को ज्यूरिख वर्ल्ड समिट की पूरी फंडिंग, शीर्ष वैज्ञानिकों से मेंटरशिप और प्रोजेक्ट ग्रांट दी जाएगी।',
+        'प्रतियोगिता श्रेणियों में सस्टेनेबल एग्री-टेक, क्वांटम एल्गोरिदम, मॉलिक्यूलर मेडिसिन और ऑटोनॉमस रोबोटिक्स शामिल हैं। छात्र व्यक्तिगत या 3 सदस्यों की टीम में भाग ले सकते हैं।',
+        'शुरुआती समीक्षा 15 नवंबर 2026 को समाप्त होगी। आवेदकों को 5-पृष्ठों का रिसर्च एब्स्ट्रैक्ट और प्रोटोटाइप डिज़ाइन जमा करना होगा।'
+      ],
+      studentTakeaway: 'अंतर्राष्ट्रीय अनुसंधान प्रतियोगिताओं में भाग लेने से मजबूत पोर्टफोलियो और सीधे वैज्ञानिकों से मेंटरशिप का अवसर मिलता है।',
+      quizPrompt: 'किसी वैज्ञानिक शोध पत्र का कौन सा मुख्य भाग प्रयोगात्मक प्रक्रिया और नियंत्रणों का विवरण देता है?'
+    }
   },
   {
     id: 'news-5',
@@ -244,7 +292,19 @@ export const INITIAL_NEWS: NewsArticle[] = [
       'Educators recommend practicing interactive visualization tools, graph interpretation, and cross-disciplinary reasoning to prepare for the modernized testing format.'
     ],
     studentTakeaway: 'Focus your revision on understanding "why" formulas work and how systems react when initial conditions change, rather than formulaic memorization.',
-    quizPrompt: 'What is the key advantage of computer adaptive testing over traditional paper-based exams?'
+    quizPrompt: 'What is the key advantage of computer adaptive testing over traditional paper-based exams?',
+    hindi: {
+      title: 'मानकीकृत परीक्षा बोर्डों ने 2027 पाठ्यक्रम के लिए एडैप्टिव मल्टी-मोडल टेस्टिंग को दी मंजूरी',
+      category: 'परीक्षा और अपडेट्स',
+      summary: 'प्रमुख कॉलेज प्रवेश परीक्षाएं अब कंप्यूटर अनुकूलित मूल्यांकनों की ओर बढ़ रही हैं, जो वास्तविक समय डेटा विश्लेषण और प्रायोगिक सिमुलेशन क्षमताओं का परीक्षण करेंगी।',
+      content: [
+        'परीक्षा बोर्डों ने अकादमिक परीक्षाओं के अगले चरण की घोषणा की है। स्थिर बहुविकल्पीय प्रश्नों के स्थान पर अब इंटरैक्टिव लैब सिमुलेशन शामिल होंगे जहां छात्र स्क्रीन पर वैज्ञानिक परिकल्पनाओं का परीक्षण करेंगे।',
+        'एडैप्टिव एल्गोरिदम छात्र के स्तर के आधार पर प्रश्नों की कठिनाई को तुरंत समायोजित करेंगे, जिससे छात्र की वास्तविक अवधारणात्मक समझ का सटीक मूल्यांकन होगा।',
+        'विशेषज्ञ आधुनिक परीक्षा प्रारूप के लिए ग्राफ़ व्याख्या, विज़ुअलाइज़ेशन और क्रॉस-डिसिप्लिनरी विश्लेषण का अभ्यास करने की सलाह देते हैं।'
+      ],
+      studentTakeaway: 'सूत्रों को केवल रटने के बजाय यह समझें कि वे "क्यों" काम करते हैं और परिस्थितियां बदलने पर क्या प्रभाव पड़ता है।',
+      quizPrompt: 'पारंपरिक पेपर परीक्षाओं की तुलना में कंप्यूटर एडैप्टिव टेस्टिंग का सबसे बड़ा लाभ क्या है?'
+    }
   },
   {
     id: 'news-6',
@@ -260,7 +320,19 @@ export const INITIAL_NEWS: NewsArticle[] = [
       'High school biochemistry students are currently modeling this enzyme in computational molecular docking competitions worldwide.'
     ],
     studentTakeaway: 'Natural biodiversity holds untapped biochemical solutions for humanity’s most pressing environmental challenges.',
-    quizPrompt: 'What class of biological catalysts accelerate chemical reactions by lowering activation energy?'
+    quizPrompt: 'What class of biological catalysts accelerate chemical reactions by lowering activation energy?',
+    hindi: {
+      title: 'गहरे समुद्र के हाइड्रोथर्मल वेंट्स में मिले ऐसे एंज़ाइम जो प्लास्टिक को 48 घंटों में विघटित कर सकते हैं',
+      category: 'महत्वपूर्ण खोजें',
+      summary: 'अटलांटिक महासागर में हाइड्रोथर्मल वेंट्स की खोज कर रहे जीवविज्ञानियों ने ऐसे बैक्टीरिया खोजे हैं जिनके एंज़ाइम बिना अत्यधिक तापमान के 48 घंटों के भीतर PET प्लास्टिक को नष्ट कर सकते हैं।',
+      content: [
+        'ज्वालामुखीय वेंट्स में रहने वाले जीव अत्यधिक खारे और खनिज युक्त वातावरण में विशेष एंज़ाइम उत्प्रेरक पैदा करके जीवित रहते हैं। आनुवंशिक अनुक्रमण से एक नए PETase वैरिएंट का पता चला है जो माइक्रोप्लास्टिक को हानिरहित घटकों में बदल देता है।',
+        'बायोइंजीनियर अब हानिरहित यीस्ट कल्चर का उपयोग करके इन एंज़ाइमों का उत्पादन कर रहे हैं, जिससे प्लास्टिक रीसाइक्लिंग के लिए पर्यावरण-अनुकूल जैविक समाधान तैयार होगा।',
+        'दुनिया भर के छात्र अब आणविक डॉकिंग प्रतियोगिताओं में इस एंज़ाइम के 3D मॉडल्स का अध्ययन कर रहे हैं।'
+      ],
+      studentTakeaway: 'प्राकृतिक जैव विविधता में मानवता की सबसे गंभीर पर्यावरणीय समस्याओं के अनसुलझे रासायनिक समाधान छिपे हैं।',
+      quizPrompt: 'सक्रियण ऊर्जा (Activation Energy) को कम करके रासायनिक अभिक्रियाओं को गति देने वाले जैविक उत्प्रेरकों को क्या कहा जाता है?'
+    }
   }
 ];
 

@@ -14,6 +14,7 @@ import {
   Bookmark,
   Compass,
   FolderKanban,
+  Headphones,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppView, User, DoubtRecord, AnalyzedNoteRecord, NewsArticle, StudentNotebookNote } from '../../types';
@@ -23,6 +24,7 @@ import { InteractiveStudyFolder, StudyFolderData } from '../ui/InteractiveStudyF
 import { StudyFolderModal } from '../notebook/StudyFolderModal';
 import { SegmentedControl } from '../ui/SegmentedControl';
 import { MorphingButton } from '../ui/MorphingButton';
+import { AnimatedEmojiButton } from '../ui/AnimatedEmojiButton';
 import { useSound } from '../../context/SoundContext';
 
 interface HomeDashboardProps {
@@ -52,14 +54,6 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   onOpenNotebookNote,
   onCreateNoteInSubject,
 }) => {
-  // Time-aware greeting
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning 👋';
-    if (hour < 17) return 'Good afternoon 👋';
-    return 'Good evening 👋';
-  };
-
   const primaryCards = [
     {
       id: 'doubt-solver' as AppView,
@@ -72,19 +66,19 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
     },
     {
       id: 'ai-notes' as AppView,
-      title: 'AI Notes',
-      description: 'Turn handwritten notes and study material into structured revision notes.',
+      title: 'AI Notes & Audio Teach',
+      description: 'Generate structured revision notes with voice-narrated chapter audio lessons.',
       icon: <FileText className="w-6 h-6" />,
-      badge: 'Smart Extraction',
+      badge: 'Audio Teach & Notes',
       color: 'bg-emerald-50/70 text-[#16835B] border-emerald-100',
       actionText: 'Analyze Notes',
     },
     {
       id: 'news-paper' as AppView,
-      title: 'News Paper',
-      description: 'Stay updated with useful educational, science, space, and student news.',
+      title: 'News Paper & Audio Digest',
+      description: 'Student journalism with Hindi/English language setting and voice narration.',
       icon: <Newspaper className="w-6 h-6" />,
-      badge: 'Daily Student Edition',
+      badge: 'Hindi / Eng & Audio',
       color: 'bg-[#F4F5F1] text-[#171A18] border-[#E1E5E1]',
       actionText: 'Read News Paper',
     },
@@ -147,14 +141,21 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       {/* Top Welcome Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-emerald-50/60 via-white to-[#F8F9F6] p-6 sm:p-8 rounded-3xl border border-[#E1E5E1] shadow-2xs">
         <div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100/80 text-[#0F6246] border border-emerald-200/60 mb-2.5">
-            <Sparkles className="w-3.5 h-3.5" /> Study to Shine Mentorship
-          </span>
+          {/* Animated Emoji Button from user's video (Hey Vishal! with blue waving arcs) */}
+          <div className="mb-3.5">
+            <AnimatedEmojiButton
+              emoji="👋"
+              label={`Hey ${user.name.split(' ')[0] || 'Vishal'}!`}
+              variant="light"
+              size="md"
+              showWavingArcs={true}
+            />
+          </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#171A18] tracking-tight">
-            {getGreeting()} <span className="font-semibold text-[#5F6762] text-xl sm:text-2xl">{user.name.split(' ')[0]}</span>
+            What do you want to learn today?
           </h1>
           <p className="text-sm sm:text-base text-[#5F6762] mt-1 font-normal">
-            What do you want to learn today?
+            Continue your personalized study plan, solve doubts, and review today's lessons.
           </p>
         </div>
 
@@ -229,6 +230,48 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Audio Teach & Guided Voice Lessons Banner */}
+      <section className="bg-gradient-to-r from-[#0F1612] via-[#152019] to-[#121B15] rounded-3xl p-6 sm:p-7 border border-[#222E26] text-white shadow-xl relative overflow-hidden">
+        <div className="absolute right-0 top-0 w-80 h-80 bg-[#10E862]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+          <div className="space-y-2 max-w-xl">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full bg-[#10E862]/20 text-[#10E862] border border-[#10E862]/30">
+                New Audio Feature
+              </span>
+              <span className="text-xs text-[#89918C] flex items-center gap-1">
+                <Headphones className="w-3.5 h-3.5 text-[#10E862]" /> Speech & Guided Lectures
+              </span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+              Study with AI Audio Teach & Daily Newspaper Briefings
+            </h3>
+            <p className="text-xs sm:text-sm text-[#89918C] leading-relaxed">
+              Listen to interactive spoken lectures from your study notes or switch between English and Hindi on today's student news paper with adjustable speed and chapter markers.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => onNavigate('ai-notes')}
+              leftIcon={<Headphones className="w-4 h-4" />}
+            >
+              Play Notes Lecture
+            </Button>
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => onNavigate('news-paper')}
+              className="border-[#2B3B30] text-emerald-300 hover:bg-white/10"
+            >
+              Open Hindi / English News
+            </Button>
+          </div>
         </div>
       </section>
 

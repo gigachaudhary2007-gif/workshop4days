@@ -85,6 +85,15 @@ export interface AnalyzedNoteRecord {
   data: AnalyzedNoteContent;
 }
 
+export interface NewsArticleHindi {
+  title: string;
+  category: string;
+  summary: string;
+  content: string[];
+  studentTakeaway: string;
+  quizPrompt?: string;
+}
+
 export interface NewsArticle {
   id: string;
   title: string;
@@ -98,6 +107,7 @@ export interface NewsArticle {
   quizPrompt?: string;
   badge?: string;
   featured?: boolean;
+  hindi?: NewsArticleHindi;
 }
 
 export interface VisualNode {

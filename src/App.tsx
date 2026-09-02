@@ -17,6 +17,7 @@ import { MyNotesView } from './components/notebook/MyNotesView';
 import { SettingsView } from './components/settings/SettingsView';
 import { ToastProvider, useToast } from './components/ui/Toast';
 import { SoundProvider } from './context/SoundContext';
+import { FloatingActionMenu } from './components/ui/FloatingActionMenu';
 
 function AppContent() {
   const { showToast } = useToast();
@@ -26,7 +27,13 @@ function AppContent() {
     const saved = localStorage.getItem('study_to_shine_user');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed && (parsed.name === 'Alex Chen' || !parsed.name)) {
+          parsed.name = 'Vishal Chaudhary';
+          parsed.email = 'gigachaudhary2007@gmail.com';
+          localStorage.setItem('study_to_shine_user', JSON.stringify(parsed));
+        }
+        return parsed;
       } catch (e) {
         return null;
       }
@@ -34,8 +41,8 @@ function AppContent() {
     // Default demo user for instant preview experience
     return {
       id: 'usr_default',
-      name: 'Alex Chen',
-      email: 'alex.chen@student.edu',
+      name: 'Vishal Chaudhary',
+      email: 'gigachaudhary2007@gmail.com',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       gradeLevel: 'Grade 12 / AP Scholar',
       studyGoalHours: 3,
@@ -282,6 +289,12 @@ function AppContent() {
           )}
         </main>
       </div>
+
+      {/* Floating Action Menu (from Video 2 template) */}
+      <FloatingActionMenu
+        onNavigate={setCurrentView}
+        currentView={currentView}
+      />
     </div>
   );
 }

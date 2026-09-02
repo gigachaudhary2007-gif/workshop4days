@@ -55,12 +55,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'ai-notes',
       label: 'AI Notes',
       icon: <FileText className="w-5 h-5" />,
+      badge: 'Audio',
     },
     {
       id: 'news-paper',
       label: 'News Paper',
       icon: <Newspaper className="w-5 h-5" />,
-      badge: 'Live',
+      badge: 'Hindi/En',
     },
     {
       id: 'my-notes',

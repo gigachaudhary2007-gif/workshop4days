@@ -1,8 +1,8 @@
 import React from 'react';
-import { Menu, Search, Sparkles, Flame, Plus, Bell } from 'lucide-react';
+import { Menu, Sparkles, Flame, Plus } from 'lucide-react';
+import { motion } from 'motion/react';
 import { AppView, User } from '../../types';
 import { Button } from '../ui/Button';
-import { AudioFeedbackButton } from '../ui/AudioFeedbackButton';
 
 interface TopHeaderProps {
   currentView: AppView;
@@ -22,7 +22,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
   const getPageTitle = (view: AppView) => {
     switch (view) {
       case 'home':
-        return 'Study Dashboard';
+        return 'Study to Shine';
       case 'doubt-solver':
         return 'AI Doubt Solver';
       case 'ai-notes':
@@ -52,7 +52,40 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
           </button>
           <div>
             <h2 className="text-base sm:text-lg font-bold text-[#171A18] tracking-tight flex items-center gap-2">
-              <span>{getPageTitle(currentView)}</span>
+              {currentView === 'home' ? (
+                /* Animated Study to Shine Title with Shining Sparkles & Shimmer */
+                <motion.span
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="inline-flex items-center gap-2 group cursor-default"
+                >
+                  <motion.span
+                    animate={{
+                      rotate: [0, 15, -10, 15, 0],
+                      scale: [1, 1.15, 1, 1.1, 1],
+                    }}
+                    transition={{
+                      repeat: Infinity,
+                      repeatDelay: 2,
+                      duration: 1.8,
+                      ease: 'easeInOut',
+                    }}
+                    className="inline-flex items-center justify-center text-amber-500"
+                  >
+                    <Sparkles className="w-4 h-4 text-emerald-600 fill-emerald-500/30" />
+                  </motion.span>
+                  <span className="bg-gradient-to-r from-[#0F6246] via-[#16835B] to-[#10E862] bg-clip-text text-transparent font-extrabold tracking-tight">
+                    Study to Shine
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/80 text-[#0F6246] border border-emerald-200/60 hidden sm:inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Learning Hub
+                  </span>
+                </motion.span>
+              ) : (
+                <span>{getPageTitle(currentView)}</span>
+              )}
+
               {currentView === 'doubt-solver' && (
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-[#0F6246]">
                   Active AI
@@ -64,9 +97,6 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
 
         {/* Right Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Audio Feedback Sound Toggle (From video micro-interactions) */}
-          <AudioFeedbackButton />
-
           {/* Quick Solve Doubt CTA if not already on Doubt Solver */}
           {currentView !== 'doubt-solver' && (
             <Button
