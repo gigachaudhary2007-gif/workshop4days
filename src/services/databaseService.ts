@@ -16,6 +16,7 @@ import {
   NoteDocument,
   DoubtDocument,
   StudyActivityDocument,
+  AnalyzedNoteRecord,
 } from '../types';
 
 /**
@@ -245,3 +246,42 @@ export async function deleteStudyActivity(userId: string, activityId: string): P
   const actRef = doc(db, 'users', userId, 'study_activities', activityId);
   await deleteDoc(actRef);
 }
+
+/**
+ * ============================================================================
+ * 5. AI NOTES MANAGEMENT (User Isolated)
+ * Location: `users/{userId}/ai_notes/{noteId}`
+ * ============================================================================
+ */
+
+export async function saveUserAiNote(
+  userId: string,
+  note: AnalyzedNoteRecord
+): Promise<void> {
+  if (!userId) throw new Error('userId is required to save an AI note');
+  const noteRef = doc(db, 'users', userId, 'ai_notes', note.id);
+  await setDoc(noteRef, {
+    ...note,
+    userId,
+    updatedAt: new Date().toISOString(),
+  }, { merge: true });
+}
+
+export async function getUserAiNotes(userId: string): Promise<AnalyzedNoteRecord[]> {
+  if (!userId) return [];
+  const col = collection(db, 'users', userId, 'ai_notes');
+  try {
+    const snap = await getDocs(col);
+    return snap.docs.map((d) => d.data() as AnalyzedNoteRecord);
+  } catch (err) {
+    console.warn('Error fetching AI notes from Firestore:', err);
+    return [];
+  }
+}
+
+export async function deleteUserAiNote(userId: string, noteId: string): Promise<void> {
+  if (!userId || !noteId) throw new Error('userId and noteId required');
+  const noteRef = doc(db, 'users', userId, 'ai_notes', noteId);
+  await deleteDoc(noteRef);
+}
+

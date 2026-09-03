@@ -21,7 +21,13 @@ import { SoundProvider } from './context/SoundContext';
 import { FloatingActionMenu } from './components/ui/FloatingActionMenu';
 import { LiquidGlassBackground } from './components/ui/LiquidGlassBackground';
 import { onAuthUserChanged, logoutUser, updateUserProfile } from './services/authService';
-import { createDoubt } from './services/databaseService';
+import {
+  createDoubt,
+  saveUserAiNote,
+  getUserAiNotes,
+  deleteUserAiNote,
+  logStudyActivity,
+} from './services/databaseService';
 
 function AppContent() {
   const { showToast } = useToast();
@@ -115,9 +121,44 @@ function AppContent() {
     localStorage.setItem(userDoubtKey, JSON.stringify(doubts));
   }, [doubts, currentUser?.id]);
 
+  // User-isolated AI notes state & persistence with Firestore cloud retrieval
   useEffect(() => {
-    localStorage.setItem('sts_ai_notes', JSON.stringify(aiNotes));
-  }, [aiNotes]);
+    const userAiKey = currentUser?.id ? `sts_ai_notes_${currentUser.id}` : 'sts_ai_notes_guest';
+    const saved = localStorage.getItem(userAiKey);
+    if (saved) {
+      try {
+        setAiNotes(JSON.parse(saved));
+      } catch {
+        setAiNotes(initialNotes);
+      }
+    } else {
+      setAiNotes(initialNotes);
+    }
+
+    if (currentUser?.id) {
+      getUserAiNotes(currentUser.id)
+        .then((firestoreNotes) => {
+          if (firestoreNotes && firestoreNotes.length > 0) {
+            setAiNotes((prev) => {
+              const map = new Map<string, AnalyzedNoteRecord>();
+              prev.forEach((n) => map.set(n.id, n));
+              firestoreNotes.forEach((n) => map.set(n.id, n));
+              const merged = Array.from(map.values());
+              localStorage.setItem(userAiKey, JSON.stringify(merged));
+              return merged;
+            });
+          }
+        })
+        .catch((err) => {
+          console.warn('Could not sync user AI notes from Firestore:', err);
+        });
+    }
+  }, [currentUser?.id]);
+
+  useEffect(() => {
+    const userAiKey = currentUser?.id ? `sts_ai_notes_${currentUser.id}` : 'sts_ai_notes_guest';
+    localStorage.setItem(userAiKey, JSON.stringify(aiNotes));
+  }, [aiNotes, currentUser?.id]);
 
   useEffect(() => {
     localStorage.setItem('sts_notebook', JSON.stringify(notebookNotes));
@@ -172,8 +213,28 @@ function AppContent() {
     }
   };
 
-  const handleSaveAiNote = (newNote: AnalyzedNoteRecord) => {
+  const handleSaveAiNote = async (newNote: AnalyzedNoteRecord) => {
     setAiNotes((prev) => [newNote, ...prev.filter((n) => n.id !== newNote.id)]);
+
+    if (currentUser?.id) {
+      try {
+        await saveUserAiNote(currentUser.id, newNote);
+        await logStudyActivity(currentUser.id, `AI Notes: ${newNote.title}`);
+      } catch (err) {
+        console.warn('Could not sync AI note to isolated Firestore:', err);
+      }
+    }
+  };
+
+  const handleDeleteAiNote = async (id: string) => {
+    setAiNotes((prev) => prev.filter((n) => n.id !== id));
+    if (currentUser?.id) {
+      try {
+        await deleteUserAiNote(currentUser.id, id);
+      } catch (err) {
+        console.warn('Could not delete AI note from Firestore:', err);
+      }
+    }
   };
 
   const handleSaveNotebookNote = (newNote: StudentNotebookNote) => {
@@ -311,6 +372,8 @@ function AppContent() {
                   initialNote={activeAiNote}
                   onSaveNote={handleSaveAiNote}
                   onExportToNotebook={handleExportToNotebook}
+                  currentUser={currentUser}
+                  onDeleteNote={handleDeleteAiNote}
                 />
               )}
 

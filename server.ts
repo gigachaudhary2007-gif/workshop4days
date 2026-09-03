@@ -238,37 +238,41 @@ app.post("/api/notes/analyze", async (req, res) => {
   try {
     const { title, rawNotes, subject, imageBase64, imageMimeType } = req.body;
 
-    if (!rawNotes && !imageBase64) {
-      return res.status(400).json({ error: "Please provide notes text or an uploaded image." });
+    const hasNotes = typeof rawNotes === "string" && rawNotes.trim().length > 0;
+    const hasImage = typeof imageBase64 === "string" && imageBase64.length > 0;
+
+    if (!hasNotes && !hasImage) {
+      return res.status(400).json({ error: "Please enter study notes or upload handwritten notes/document." });
     }
 
     const ai = getGeminiClient();
 
     if (!ai) {
-      // Fallback structured study guide
+      // Fallback structured study guide if GEMINI_API_KEY is not configured
       return res.json({
         topic: title || "Comprehensive Study Notes",
+        explanation: `This study guide summarizes the core foundational knowledge for ${subject || "Academic Study"} based on the provided notes and materials, focusing on clear conceptual understanding and high-yield revision.`,
         importantConcepts: [
-          { concept: "Core Foundation", description: "Fundamental axioms and definitions establishing this topic." },
-          { concept: "Operational Framework", description: "How various variables and theoretical components interact." }
+          { concept: "Core Foundation", description: "Fundamental axioms, principles, and definitions establishing this topic." },
+          { concept: "Operational Framework", description: "How various variables, physical quantities, and theoretical components interact." }
         ],
         definitions: [
-          { term: "Fundamental Term", definition: "A standard academic unit of analysis or conceptual principle." },
-          { term: "Equilibrium Condition", definition: "A state in which opposing forces or influences are balanced." }
+          { term: "Fundamental Concept", definition: "A standard academic unit of analysis or governing conceptual principle." },
+          { term: "Equilibrium Condition", definition: "A state in which opposing forces, reaction rates, or influences are balanced." }
         ],
         formulas: [
           { name: "Primary Governing Relation", formula: "f(x) = ∑ a_n · x^n", explanation: "Describes the overarching relationship across the studied domain." }
         ],
         keyPoints: [
-          "Always verify prerequisites before applying advanced equations.",
+          "Always verify prerequisites and units before applying advanced equations.",
           "Identify boundary constraints early in problem formulation.",
-          "Structure diagrams with explicit vector or state designations."
+          "Structure diagrams with explicit vector, state, or chemical designations."
         ],
         examples: [
           { problem: "Sample Application Problem: Calculate output given initial conditions.", solution: "Apply the governing formula directly, simplify algebraic terms, and verify units." }
         ],
         importantQuestions: [
-          { question: "What is the primary difference between theoretical equilibrium and practical steady-state?", hint: "Focus on whether external work or energy flux is continuous.", answer: "Equilibrium requires no net exchange or entropy generation, whereas steady-state maintains constant parameters via continuous energy throughput." }
+          { question: "What is the primary difference between theoretical equilibrium and steady-state?", hint: "Focus on whether external work or energy flux is continuous.", answer: "Equilibrium requires no net exchange or entropy generation, whereas steady-state maintains constant parameters via continuous energy throughput." }
         ],
         quickRevision: [
           "Topic Mastery: Memorize the core governing definitions.",
@@ -279,126 +283,187 @@ app.post("/api/notes/analyze", async (req, res) => {
     }
 
     const contents: any[] = [];
-    let promptText = `You are "Study to Shine" Note Architect.
-Analyze the provided handwritten notes, study transcript, or document, and organize it into a pristine, high-impact study document.
 
-Subject: ${subject || "General"}
-Topic/Title: ${title || "Study Material"}
-Notes content:
-${rawNotes || "(Refer to attached image/document)"}
+    // Process image if uploaded (multimodal Gemini input for handwritten notes)
+    if (hasImage) {
+      let detectedMime = imageMimeType;
+      if (!detectedMime && imageBase64.startsWith("data:")) {
+        const match = imageBase64.match(/^data:([^;]+);base64,/);
+        if (match) {
+          detectedMime = match[1];
+        }
+      }
+      detectedMime = detectedMime || "image/jpeg";
 
-Organize the content into:
-1. topic (clean string)
-2. importantConcepts (array of { concept, description })
-3. definitions (array of { term, definition })
-4. formulas (array of { name, formula, explanation })
-5. keyPoints (array of string bullet points)
-6. examples (array of { problem, solution })
-7. importantQuestions (array of { question, hint, answer } for exam prep)
-8. quickRevision (array of concise revision points for 5-minute review)
+      const cleanBase64 = imageBase64
+        .replace(/^data:[a-zA-Z0-9\/\+\-]+;base64,/, "")
+        .trim();
 
-Respond strictly in JSON according to this structure.`;
-
-    if (imageBase64) {
-      contents.push({
-        inlineData: {
-          mimeType: imageMimeType || "image/jpeg",
-          data: imageBase64.replace(/^data:[a-zA-Z0-9\/\+\-]+;base64,/, ""),
-        },
-      });
+      if (cleanBase64) {
+        contents.push({
+          inlineData: {
+            mimeType: detectedMime,
+            data: cleanBase64,
+          },
+        });
+      }
     }
+
+    const promptText = `You are "Study to Shine" Note Architect and Master Academic Tutor.
+Analyze the provided handwritten notes, textbook photos, study transcript, or document, and organize it into a pristine, high-yield, pedagogically structured study document.
+
+Subject: ${subject || "General Academic"}
+Topic/Title: ${title || "Study Material"}
+${hasNotes ? `Notes Content / Excerpt:\n${rawNotes.trim()}\n` : ""}
+${hasImage ? `[Handwritten Notes / Document Attached]: Carefully read and transcribe all handwritten text, diagrams, labels, and formulas from the student's uploaded image. Extract and synthesize the study material with high accuracy.` : ""}
+
+Generate a comprehensive, student-friendly response with:
+1. topic: A clear, descriptive subject topic title.
+2. explanation: A simple, intuitive explanation of the entire topic in plain, encouraging language suitable for high school / college exam prep.
+3. importantConcepts: An array of { concept, description } explaining each key theoretical mechanism.
+4. definitions: An array of { term, definition } defining key terminology.
+5. formulas: An array of { name, formula, explanation }. If the topic is purely conceptual or non-mathematical, provide standard relevant relations or leave as an empty array [].
+6. keyPoints: An array of string bullet points capturing essential takeaways and exam alerts.
+7. examples: An array of { problem, solution } demonstrating practical applications.
+8. importantQuestions: An array of { question, hint, answer } for active-recall practice.
+9. quickRevision: An array of concise revision points for a 5-minute pre-exam review.
+
+Respond strictly with valid JSON.`;
+
     contents.push({ text: promptText });
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
-      contents: { parts: contents },
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            topic: { type: Type.STRING },
-            importantConcepts: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  concept: { type: Type.STRING },
-                  description: { type: Type.STRING },
-                },
-                required: ["concept", "description"],
+    const generationConfig = {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          topic: { type: Type.STRING },
+          explanation: { type: Type.STRING },
+          importantConcepts: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                concept: { type: Type.STRING },
+                description: { type: Type.STRING },
               },
-            },
-            definitions: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  term: { type: Type.STRING },
-                  definition: { type: Type.STRING },
-                },
-                required: ["term", "definition"],
-              },
-            },
-            formulas: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  name: { type: Type.STRING },
-                  formula: { type: Type.STRING },
-                  explanation: { type: Type.STRING },
-                },
-                required: ["name", "formula", "explanation"],
-              },
-            },
-            keyPoints: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-            },
-            examples: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  problem: { type: Type.STRING },
-                  solution: { type: Type.STRING },
-                },
-                required: ["problem", "solution"],
-              },
-            },
-            importantQuestions: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  question: { type: Type.STRING },
-                  hint: { type: Type.STRING },
-                  answer: { type: Type.STRING },
-                },
-                required: ["question", "hint", "answer"],
-              },
-            },
-            quickRevision: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
+              required: ["concept", "description"],
             },
           },
-          required: [
-            "topic",
-            "importantConcepts",
-            "definitions",
-            "formulas",
-            "keyPoints",
-            "examples",
-            "importantQuestions",
-            "quickRevision",
-          ],
+          definitions: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                term: { type: Type.STRING },
+                definition: { type: Type.STRING },
+              },
+              required: ["term", "definition"],
+            },
+          },
+          formulas: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                name: { type: Type.STRING },
+                formula: { type: Type.STRING },
+                explanation: { type: Type.STRING },
+              },
+              required: ["name", "formula", "explanation"],
+            },
+          },
+          keyPoints: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+          },
+          examples: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                problem: { type: Type.STRING },
+                solution: { type: Type.STRING },
+              },
+              required: ["problem", "solution"],
+            },
+          },
+          importantQuestions: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                question: { type: Type.STRING },
+                hint: { type: Type.STRING },
+                answer: { type: Type.STRING },
+              },
+              required: ["question", "hint", "answer"],
+            },
+          },
+          quickRevision: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+          },
         },
+        required: [
+          "topic",
+          "explanation",
+          "importantConcepts",
+          "definitions",
+          "formulas",
+          "keyPoints",
+          "examples",
+          "importantQuestions",
+          "quickRevision",
+        ],
       },
-    });
+    };
 
-    const parsed = JSON.parse(response.text || "{}");
+    // Resilient model cascade
+    const modelsToTry = ["gemini-3.8-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
+    let responseText = "";
+    let lastError: any = null;
+
+    for (const model of modelsToTry) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: { parts: contents },
+          config: generationConfig,
+        });
+
+        if (response && response.text) {
+          responseText = response.text;
+          break;
+        }
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`Model ${model} request did not complete, trying next model in cascade:`, err?.message || err);
+      }
+    }
+
+    if (!responseText) {
+      throw new Error(lastError?.message || "Empty response received from Gemini.");
+    }
+
+    const cleanedText = responseText
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```$/i, "")
+      .trim();
+
+    let parsed: any = null;
+    try {
+      parsed = JSON.parse(cleanedText);
+    } catch {
+      const match = responseText.match(/\{[\s\S]*\}/);
+      if (match) {
+        parsed = JSON.parse(match[0]);
+      } else {
+        throw new Error("Could not parse JSON response from Gemini.");
+      }
+    }
+
     return res.json(parsed);
   } catch (error: any) {
     console.error("Error analyzing notes:", error);

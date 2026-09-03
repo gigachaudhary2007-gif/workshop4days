@@ -17,20 +17,25 @@ import {
   Lightbulb,
   Zap,
   ListCheck,
-  Headphones
+  Headphones,
+  ExternalLink,
+  Trash2
 } from 'lucide-react';
-import { AnalyzedNoteRecord, AnalyzedNoteContent } from '../../types';
+import { AnalyzedNoteRecord, AnalyzedNoteContent, User } from '../../types';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { FileUploader } from '../ui/FileUploader';
 import { useToast } from '../ui/Toast';
 import { AudioTeacherPlayer, AudioLessonChapter } from '../ui/AudioTeacherPlayer';
+import { uploadNoteFile } from '../../services/storageService';
 
 interface AiNotesViewProps {
   savedNotes: AnalyzedNoteRecord[];
   onSaveNote: (note: AnalyzedNoteRecord) => void;
   onExportToNotebook?: (title: string, content: string, subject: string) => void;
   initialNote?: AnalyzedNoteRecord | null;
+  currentUser?: User | null;
+  onDeleteNote?: (id: string) => void;
 }
 
 export const AiNotesView: React.FC<AiNotesViewProps> = ({
@@ -38,6 +43,8 @@ export const AiNotesView: React.FC<AiNotesViewProps> = ({
   onSaveNote,
   onExportToNotebook,
   initialNote,
+  currentUser,
+  onDeleteNote,
 }) => {
   const { showToast } = useToast();
 
@@ -155,11 +162,44 @@ export const AiNotesView: React.FC<AiNotesViewProps> = ({
       return;
     }
 
+    // Validate uploaded file if present
+    if (selectedFile) {
+      if (selectedFile.size && selectedFile.size > 10 * 1024 * 1024) {
+        showToast('Uploaded file exceeds 10MB limit. Please upload a smaller image or document.', 'error');
+        return;
+      }
+
+      const isImage = selectedFile.type?.startsWith('image/');
+      const isPdf = selectedFile.type === 'application/pdf' || selectedFile.name?.toLowerCase().endsWith('.pdf');
+      const isText = selectedFile.type?.startsWith('text/') || selectedFile.name?.toLowerCase().endsWith('.txt');
+
+      if (!isImage && !isPdf && !isText) {
+        showToast('Unsupported file format. Please upload an image, PDF, or text file.', 'error');
+        return;
+      }
+    }
+
     setIsLoading(true);
     setCurrentNote(null);
     setRevealedAnswers({});
 
     try {
+      // 1. Securely upload original note to Firebase Storage under users/{userId}/notes/
+      let originalFileUrl: string | undefined = undefined;
+      let storagePath: string | undefined = undefined;
+
+      if (selectedFile && currentUser?.id) {
+        try {
+          const blob = await fetch(selectedFile.base64).then((r) => r.blob());
+          const uploadRes = await uploadNoteFile(currentUser.id, blob, selectedFile.name);
+          originalFileUrl = uploadRes.downloadUrl;
+          storagePath = uploadRes.storagePath;
+        } catch (storageErr) {
+          console.warn('Firebase Storage upload warning (continuing with analysis):', storageErr);
+        }
+      }
+
+      // 2. Request Gemini analysis from server-side endpoint
       const response = await fetch('/api/notes/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -173,7 +213,8 @@ export const AiNotesView: React.FC<AiNotesViewProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('Server returned error analyzing notes');
+        const errorJson = await response.json().catch(() => ({}));
+        throw new Error(errorJson.error || 'Server returned error analyzing notes');
       }
 
       const analyzedData: AnalyzedNoteContent = await response.json();
@@ -183,8 +224,10 @@ export const AiNotesView: React.FC<AiNotesViewProps> = ({
         title: noteTitle.trim() || analyzedData.topic,
         subject,
         createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        summary: analyzedData.quickRevision?.[0] || 'Structured revision guide with concepts and formulas.',
+        summary: analyzedData.explanation || analyzedData.quickRevision?.[0] || 'Structured revision guide with concepts and formulas.',
         rawText,
+        originalFileUrl,
+        storagePath,
         data: analyzedData,
       };
 
@@ -193,7 +236,7 @@ export const AiNotesView: React.FC<AiNotesViewProps> = ({
       showToast('Study notes synthesized into structured revision document!');
     } catch (err: any) {
       console.error('Error analyzing notes:', err);
-      showToast('Failed to analyze notes. Please try again.', 'error');
+      showToast(err?.message || 'Failed to analyze notes. Please try again.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -299,37 +342,85 @@ ${d.quickRevision.map((r) => `- ${r}`).join('\n')}
       {activeTab === 'library' ? (
         /* Library of Saved Study Documents */
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {savedNotes.map((note) => (
-              <div
-                key={note.id}
-                onClick={() => {
-                  setCurrentNote(note);
-                  setActiveTab('create');
-                }}
-                className="bg-white rounded-2xl border border-[#E1E5E1] p-5 hover:border-[#16835B]/40 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-[#16835B] border border-emerald-100">
-                      {note.subject}
-                    </span>
-                    <span className="text-[11px] text-[#89918C]">{note.createdAt}</span>
-                  </div>
-                  <h3 className="text-sm font-bold text-[#171A18] group-hover:text-[#16835B] transition-colors line-clamp-1">
-                    {note.title}
-                  </h3>
-                  <p className="text-xs text-[#5F6762] mt-1.5 line-clamp-2 leading-relaxed">
-                    {note.summary}
-                  </p>
-                </div>
-                <div className="mt-4 pt-3 border-t border-[#E1E5E1] flex items-center justify-between text-xs font-semibold text-[#16835B]">
-                  <span>Open Study Guide</span>
-                  <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </div>
+          {savedNotes.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-dashed border-[#E1E5E1] p-12 text-center flex flex-col items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-[#16835B] flex items-center justify-center mb-3">
+                <FileText className="w-6 h-6" />
               </div>
-            ))}
-          </div>
+              <h3 className="text-sm font-bold text-[#171A18]">No Saved Study Guides Yet</h3>
+              <p className="text-xs text-[#5F6762] mt-1 max-w-sm">
+                Upload handwritten notes or enter lecture text to synthesize and save your first structured revision guide.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveTab('create')}
+                className="mt-4"
+              >
+                Create Study Guide
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {savedNotes.map((note) => (
+                <div
+                  key={note.id}
+                  onClick={() => {
+                    setCurrentNote(note);
+                    setActiveTab('create');
+                  }}
+                  className="bg-white rounded-2xl border border-[#E1E5E1] p-5 hover:border-[#16835B]/40 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-[#16835B] border border-emerald-100">
+                          {note.subject}
+                        </span>
+                        {note.originalFileUrl && (
+                          <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100">
+                            Source Attached
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] text-[#89918C]">{note.createdAt}</span>
+                        {onDeleteNote && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (window.confirm(`Delete saved note "${note.title}"?`)) {
+                                onDeleteNote(note.id);
+                                if (currentNote?.id === note.id) {
+                                  setCurrentNote(null);
+                                }
+                                showToast('Note deleted');
+                              }
+                            }}
+                            className="p-1 text-[#89918C] hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                            title="Delete note"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <h3 className="text-sm font-bold text-[#171A18] group-hover:text-[#16835B] transition-colors line-clamp-1">
+                      {note.title}
+                    </h3>
+                    <p className="text-xs text-[#5F6762] mt-1.5 line-clamp-2 leading-relaxed">
+                      {note.summary}
+                    </p>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-[#E1E5E1] flex items-center justify-between text-xs font-semibold text-[#16835B]">
+                    <span>Open Study Guide</span>
+                    <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       ) : (
         /* Create & Analysis Layout */
@@ -453,7 +544,19 @@ ${d.quickRevision.map((r) => `- ${r}`).join('\n')}
                     </h2>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {currentNote.originalFileUrl && (
+                      <a
+                        href={currentNote.originalFileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs text-[#16835B] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1.5 rounded-lg transition-colors font-semibold"
+                        title="Open uploaded note from Firebase Storage"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Source File</span>
+                      </a>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -505,6 +608,19 @@ ${d.quickRevision.map((r) => `- ${r}`).join('\n')}
 
                 {/* Document Content Sections */}
                 <div className="p-6 sm:p-7 space-y-6 max-h-[750px] overflow-y-auto">
+                  {/* Simple Explanation */}
+                  {currentNote.data.explanation && (
+                    <section className="space-y-2">
+                      <div className="flex items-center gap-2 text-xs font-bold text-[#16835B] uppercase tracking-wider">
+                        <Sparkles className="w-4 h-4" />
+                        <span>Simple Explanation</span>
+                      </div>
+                      <div className="p-4 rounded-xl border border-emerald-100 bg-emerald-50/40 text-xs text-[#171A18] leading-relaxed">
+                        {currentNote.data.explanation}
+                      </div>
+                    </section>
+                  )}
+
                   {/* Important Concepts */}
                   <section className="space-y-3">
                     <div className="flex items-center gap-2 text-xs font-bold text-[#16835B] uppercase tracking-wider">

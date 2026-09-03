@@ -116,6 +116,7 @@ export interface QuestionItem {
 
 export interface AnalyzedNoteContent {
   topic: string;
+  explanation?: string;
   importantConcepts: ConceptItem[];
   definitions: DefinitionItem[];
   formulas: FormulaItem[];
@@ -132,6 +133,8 @@ export interface AnalyzedNoteRecord {
   createdAt: string;
   summary: string;
   rawText?: string;
+  originalFileUrl?: string;
+  storagePath?: string;
   data: AnalyzedNoteContent;
 }
 
