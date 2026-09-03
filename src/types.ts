@@ -150,6 +150,7 @@ export interface NewsArticleHindi {
   category: string;
   summary: string;
   content: string[];
+  keyPoints?: string[];
   studentTakeaway: string;
   quizPrompt?: string;
 }
@@ -163,6 +164,7 @@ export interface NewsArticle {
   readTime: string;
   summary: string;
   content: string[];
+  keyPoints?: string[];
   studentTakeaway: string;
   quizPrompt?: string;
   badge?: string;

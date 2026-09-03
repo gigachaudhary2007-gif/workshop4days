@@ -10,7 +10,8 @@ import {
   Sparkles,
   ChevronRight,
   Flame,
-  Star
+  Star,
+  X
 } from 'lucide-react';
 import { AppView, User } from '../../types';
 import { soundEffects } from '../../utils/soundEffects';
@@ -101,7 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Upper Section: Logo, Navigation, and Clean Fitted Animation */}
         <div className="flex-1 flex flex-col min-h-0 justify-between">
           <div>
-            <div className="px-5 py-5 border-b border-white/80 flex items-center justify-between shrink-0">
+            <div className="px-5 py-4 sm:py-5 border-b border-white/80 flex items-center justify-between shrink-0">
               <div
                 onClick={() => handleItemClick('home')}
                 className="flex items-center gap-3 cursor-pointer group"
@@ -118,17 +119,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   </p>
                 </div>
               </div>
+
+              {/* Mobile Close Button */}
+              {onCloseMobile && (
+                <button
+                  type="button"
+                  onClick={onCloseMobile}
+                  className="lg:hidden p-2 rounded-xl text-[#5F6762] hover:text-[#171A18] hover:bg-white/80 active:bg-emerald-50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
+                  aria-label="Close navigation menu"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
             </div>
 
             {/* Navigation Items (Translucent Liquid Glass Highlight for active) */}
-            <nav className="p-3 space-y-1 mt-2 shrink-0">
+            <nav className="p-3 space-y-1 mt-1 sm:mt-2 shrink-0">
               {navItems.map((item) => {
                 const isActive = currentView === item.id;
                 return (
                   <button
                     key={item.id}
                     onClick={() => handleItemClick(item.id)}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-200 group cursor-pointer ${
+                    className={`w-full flex items-center justify-between px-4 py-3 min-h-[44px] rounded-2xl text-sm font-semibold transition-all duration-200 group cursor-pointer ${
                       isActive
                         ? 'bg-gradient-to-r from-[#DCEFE7]/85 to-[#EEF7F3]/70 text-[#0F6246] border border-emerald-300/60 shadow-[0_4px_16px_rgba(22,131,91,0.08)] backdrop-blur-md'
                         : 'text-[#5F6762] hover:text-[#171A18] hover:bg-white/60 border border-transparent'

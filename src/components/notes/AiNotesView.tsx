@@ -301,24 +301,24 @@ ${d.quickRevision.map((r) => `- ${r}`).join('\n')}
   return (
     <div className="space-y-6 pb-12">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-[#0F6246] border border-emerald-100 mb-2">
             <Sparkles className="w-3.5 h-3.5 text-[#16835B]" /> Document Structuring Engine
           </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#171A18] tracking-tight">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#171A18] tracking-tight">
             AI Notes Workspace
           </h1>
-          <p className="text-xs sm:text-sm text-[#5F6762] mt-1">
+          <p className="text-xs sm:text-sm text-[#5F6762] mt-0.5 sm:mt-1">
             Turn handwritten notes, lecture transcripts, and PDFs into high-yield study documents.
           </p>
         </div>
 
         {/* View Switcher Tabs */}
-        <div className="flex items-center gap-2 bg-[#F4F5F1] p-1 rounded-xl border border-[#E1E5E1]">
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-[#F4F5F1] p-1 rounded-xl border border-[#E1E5E1] self-start sm:self-auto shrink-0">
           <button
             onClick={() => setActiveTab('create')}
-            className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-all ${
+            className={`text-xs font-semibold px-3 py-2 min-h-[38px] rounded-lg transition-all cursor-pointer ${
               activeTab === 'create'
                 ? 'bg-white text-[#171A18] shadow-2xs'
                 : 'text-[#5F6762] hover:text-[#171A18]'
@@ -328,7 +328,7 @@ ${d.quickRevision.map((r) => `- ${r}`).join('\n')}
           </button>
           <button
             onClick={() => setActiveTab('library')}
-            className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-all ${
+            className={`text-xs font-semibold px-3 py-2 min-h-[38px] rounded-lg transition-all cursor-pointer ${
               activeTab === 'library'
                 ? 'bg-white text-[#171A18] shadow-2xs'
                 : 'text-[#5F6762] hover:text-[#171A18]'
@@ -435,7 +435,7 @@ ${d.quickRevision.map((r) => `- ${r}`).join('\n')}
                 onChange={(e) => setNoteTitle(e.target.value)}
               />
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="ai-notes-subject-select" className="block text-xs font-bold text-[#5F6762] uppercase tracking-wider mb-1.5">
                     Subject
@@ -444,7 +444,7 @@ ${d.quickRevision.map((r) => `- ${r}`).join('\n')}
                     id="ai-notes-subject-select"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    className="w-full text-xs font-medium text-[#171A18] bg-white border border-[#E1E5E1] rounded-xl px-3 py-2.5 outline-none focus:border-[#16835B]"
+                    className="w-full text-xs font-medium text-[#171A18] bg-white border border-[#E1E5E1] rounded-xl px-3 py-2.5 min-h-[42px] outline-none focus:border-[#16835B] cursor-pointer"
                   >
                     <option value="Biology">Biology</option>
                     <option value="Physics">Physics</option>
@@ -463,9 +463,10 @@ ${d.quickRevision.map((r) => `- ${r}`).join('\n')}
                     <button
                       type="button"
                       onClick={() => handleApplySample(samplePrompts[0])}
-                      className="w-full text-xs text-left truncate px-3 py-2.5 rounded-xl border border-[#E1E5E1] bg-[#F8F9F6] hover:bg-[#F4F5F1] text-[#16835B] font-semibold"
+                      className="w-full text-xs text-left truncate px-3 py-2.5 min-h-[42px] rounded-xl border border-[#E1E5E1] bg-[#F8F9F6] hover:bg-[#F4F5F1] active:bg-emerald-50 text-[#16835B] font-semibold cursor-pointer flex items-center justify-between"
                     >
-                      Load Sample Note
+                      <span>Load Sample Note</span>
+                      <Sparkles className="w-3.5 h-3.5 shrink-0 ml-1 text-[#16835B]" />
                     </button>
                   </div>
                 </div>
@@ -506,7 +507,7 @@ ${d.quickRevision.map((r) => `- ${r}`).join('\n')}
                   type="submit"
                   size="md"
                   isLoading={isLoading}
-                  className="w-full"
+                  className="w-full min-h-[44px] justify-center shadow-[0_4px_16px_rgba(22,131,91,0.25)]"
                   rightIcon={<Sparkles className="w-4 h-4" />}
                 >
                   Generate Structured Study Guide
@@ -531,7 +532,7 @@ ${d.quickRevision.map((r) => `- ${r}`).join('\n')}
               /* Beautiful Study Document Layout */
               <div className="bg-white rounded-2xl border border-[#E1E5E1] shadow-2xs overflow-hidden">
                 {/* Document Header Toolbar */}
-                <div className="p-5 sm:p-6 bg-gradient-to-b from-[#F8F9F6] to-white border-b border-[#E1E5E1] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="p-4 sm:p-6 bg-gradient-to-b from-[#F8F9F6] to-white border-b border-[#E1E5E1] flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-[#0F6246]">
@@ -539,18 +540,18 @@ ${d.quickRevision.map((r) => `- ${r}`).join('\n')}
                       </span>
                       <span className="text-xs text-[#89918C]">{currentNote.createdAt}</span>
                     </div>
-                    <h2 className="text-lg sm:text-xl font-extrabold text-[#171A18] tracking-tight">
+                    <h2 className="text-base sm:text-xl font-extrabold text-[#171A18] tracking-tight">
                       {currentNote.data.topic}
                     </h2>
                   </div>
 
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
                     {currentNote.originalFileUrl && (
                       <a
                         href={currentNote.originalFileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs text-[#16835B] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1.5 rounded-lg transition-colors font-semibold"
+                        className="inline-flex items-center gap-1.5 text-xs text-[#16835B] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-2 min-h-[40px] rounded-xl transition-colors font-semibold"
                         title="Open uploaded note from Firebase Storage"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
@@ -562,6 +563,7 @@ ${d.quickRevision.map((r) => `- ${r}`).join('\n')}
                       size="sm"
                       onClick={handleCopyDocument}
                       leftIcon={copied ? <Check className="w-3.5 h-3.5 text-[#16835B]" /> : <Copy className="w-3.5 h-3.5" />}
+                      className="flex-1 sm:flex-initial min-h-[40px] justify-center"
                     >
                       {copied ? 'Copied' : 'Copy'}
                     </Button>
@@ -571,6 +573,7 @@ ${d.quickRevision.map((r) => `- ${r}`).join('\n')}
                         size="sm"
                         onClick={handleSaveToNotebook}
                         leftIcon={<BookmarkPlus className="w-3.5 h-3.5 text-[#16835B]" />}
+                        className="flex-1 sm:flex-initial min-h-[40px] justify-center"
                       >
                         Notebook
                       </Button>
@@ -580,7 +583,7 @@ ${d.quickRevision.map((r) => `- ${r}`).join('\n')}
                       size="sm"
                       onClick={() => window.print()}
                       leftIcon={<Printer className="w-3.5 h-3.5" />}
-                      className="hidden sm:inline-flex"
+                      className="hidden sm:inline-flex min-h-[40px]"
                     >
                       Print
                     </Button>

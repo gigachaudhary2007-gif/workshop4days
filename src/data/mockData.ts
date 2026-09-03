@@ -179,12 +179,22 @@ export const INITIAL_NEWS: NewsArticle[] = [
       'Unlike previous controversial high-pressure experiments requiring diamond anvil cells exceeding hundreds of gigapascals, this novel thin-film lattice maintains Cooper-pair coherence at mild ambient pressures using epitaxial compressive strain.',
       'For high school and university STEM students, this breakthrough directly validates theoretical predictions in condensed matter physics that were previously only explored computationally. The technology promises near-zero energy transmission loss and ultra-compact particle accelerators.'
     ],
+    keyPoints: [
+      'Independent labs confirm zero electrical resistance in layered nickelate structures.',
+      'Operates near ambient room temperatures and mild pressure using epitaxial strain.',
+      'Potential game-changer for energy grids, loss-free transmission, and quantum computers.'
+    ],
     studentTakeaway: 'Understanding electronic band structures and lattice strain is becoming essential for future materials science and energy engineering careers.',
     quizPrompt: 'What phenomenon causes electrons to pair up without electrical resistance in a superconductor?',
     hindi: {
       title: 'निकलेट सुपरलैटिस में वैज्ञानिकों ने की कमरे के तापमान के करीब सुपरकंडक्टिविटी की पुष्टि',
       category: 'विज्ञान और प्रौद्योगिकी',
       summary: 'विश्वविद्यालय भौतिकी प्रयोगशालाओं के एक संघ ने सिंथेटिक निकलेट सुपरलैटिस में कम दबाव वाले सुपरकंडक्टिविटी का सत्यापन किया है, जिसके पावर ग्रिड और क्वांटम प्रोसेसर के लिए क्रांतिकारी परिणाम होंगे।',
+      keyPoints: [
+        'स्वतंत्र प्रयोगशालाओं ने निकलेट संरचनाओं में शून्य विद्युत प्रतिरोध की पुष्टि की।',
+        'कमरे के तापमान और सामान्य परिवेशी दबाव पर काम करने में सक्षम।',
+        'ऊर्जा ग्रिड और क्वांटम कंप्यूटरों के लिए क्रांतिकारी खोज।'
+      ],
       content: [
         'भौतिकविदों द्वारा इसे इस दशक के सबसे रोमांचक प्रयोगों में से एक बताया जा रहा है। शोधकर्ताओं ने कमरे के तापमान के करीब स्तरित निकलेट संरचनाओं में शून्य विद्युत प्रतिरोध दर्ज किया है।',
         'अत्यधिक उच्च दबाव वाले पुराने प्रयोगों के विपरीत, यह नई पतली फिल्म सामान्य परिवेश के दबाव पर भी कूपर-जोड़ी स्थिरता बनाए रखती है।',
@@ -207,12 +217,22 @@ export const INITIAL_NEWS: NewsArticle[] = [
       'These reserves will provide vital drinking water, oxygen generation through water electrolysis, and liquid hydrogen/oxygen rocket propellant for forward expeditions toward Mars.',
       'Student space clubs and collegiate robotics teams are invited to participate in the upcoming Lunar Excavator and In-Situ Resource Utilization (ISRU) Design Challenge launched alongside the discovery.'
     ],
+    keyPoints: [
+      'High-resolution polar radar completes water-ice maps at the Moon’s South Pole.',
+      'Sub-surface ice is within 1.5 meters, enabling habitat life support and Mars fuel synthesis.',
+      'Global student robotics teams invited to participate in ISRU engineering challenge.'
+    ],
     studentTakeaway: 'In-situ resource utilization (ISRU) drastically reduces launch payloads, making multi-planetary exploration economically and logistically feasible.',
     quizPrompt: 'Which chemical process will astronauts use to split lunar water into breathable oxygen and rocket fuel?',
     hindi: {
       title: 'नासा और ईएसए ने चंद्रमा के दक्षिणी ध्रुव पर जल-बर्फ का सटीक नक्शा पूरा किया',
       category: 'अंतरिक्ष विज्ञान',
       summary: 'चंद्र ध्रुवीय ऑर्बिटर्स की हाई-रिज़ॉल्यूशन रडार इमेजिंग ने चंद्रमा के दक्षिणी ध्रुव के क्रेटरों में विशाल जल-बर्फ के भंडारों का पता लगाया है, जिससे स्थायी मानव आवास की योजना को बल मिला है।',
+      keyPoints: [
+        'चंद्रमा के दक्षिणी ध्रुव पर जल-बर्फ का उच्च-रिज़ॉल्यूशन नक्शा तैयार किया गया।',
+        'सतह के 1.5 मीटर के भीतर उपलब्ध बर्फ से ऑक्सीजन और रॉकेट ईंधन का उत्पादन संभव होगा।',
+        'विद्यार्थियों के लिए लूनर एक्सकेवेटर और ISRU डिज़ाइन प्रतियोगिता शुरू की गई।'
+      ],
       content: [
         'लूनर रीकॉनेसेंस टीम ने अंतर्राष्ट्रीय अंतरिक्ष एजेंसियों के साथ मिलकर ध्रुवीय जल-बर्फ का सबसे विस्तृत भौगोलिक एटलस जारी किया है। नक्शे से पता चलता है कि सतह की मिट्टी के 1.5 मीटर के भीतर आसानी से उपलब्ध बर्फ मौजूद है।',
         'यह भंडार अंतरिक्ष यात्रियों के लिए पीने का पानी, इलेक्ट्रोलिसिस के ज़रिए ऑक्सीजन और मंगल अभियानों के लिए लिक्विड हाइड्रोजन-ऑक्सीजन रॉकेट ईंधन प्रदान करेगा।',
@@ -235,12 +255,22 @@ export const INITIAL_NEWS: NewsArticle[] = [
       'Researchers emphasize that the goal of modern AI in education is cognitive amplification, teaching students how to deconstruct difficult multi-step problems, identify their own cognitive biases, and think like researchers.',
       'The study also highlighted the vital role of human mentors and classroom discussions in synthesizing creative debate and ethical decision-making that complement AI study companions.'
     ],
+    keyPoints: [
+      'Socratic AI mentors boost conceptual retention and problem-solving exam scores by 22%.',
+      'Encourages cognitive articulation and deconstruction rather than passive answers.',
+      'Combines best when paired with human peer debate and teacher mentorship.'
+    ],
     studentTakeaway: 'Active recall and Socratic dialogue build permanent neural pathways far faster than passive memorization.',
     quizPrompt: 'How does the Socratic method differ from rote memorization?',
     hindi: {
       title: 'नेक्स्ट-जेनरेशन रीजनिंग एआई सुकराती संवाद से छात्रों को व्यक्तिगत मार्गदर्शन दे रहा है',
       category: 'एआई और प्रौद्योगिकी',
       summary: '50 स्कूल जिलों के शोध से पता चला है कि सीधे उत्तर देने के बजाय सुकराती सवालों के ज़रिए मार्गदर्शन करने वाले एआई ट्यूटर्स कैलकुलस और भौतिकी में छात्रों की समझ को दोगुना करते हैं।',
+      keyPoints: [
+        'सुकराती एआई मेंटर्स ने छात्रों के वैचारिक प्रतिधारण और परीक्षा प्रदर्शन में 22% सुधार किया।',
+        'सीधे उत्तर देने के बजाय छात्रों को अपने तर्क स्वयं स्पष्ट करने के लिए प्रेरित किया जाता है।',
+        'शिक्षकों के मार्गदर्शन और कक्षा की चर्चाओं के साथ मिलकर यह तकनीक सबसे प्रभावी है।'
+      ],
       content: [
         '25,000 से अधिक छात्रों पर 18 महीने तक किए गए अध्ययन से स्पष्ट हुआ है कि जब एआई मेंटर्स छात्रों से चरण-दर-चरण अपने तर्क स्पष्ट करवाते हैं, तो परीक्षा प्रदर्शन में 22% का सुधार होता है।',
         'शोधकर्ताओं का कहना है कि शिक्षा में आधुनिक एआई का लक्ष्य केवल उत्तर देना नहीं बल्कि छात्रों के सोचने की क्षमता को बढ़ाना और उन्हें शोधकर्ताओं की तरह सोचना सिखाना है।',
@@ -263,12 +293,22 @@ export const INITIAL_NEWS: NewsArticle[] = [
       'Categories include Sustainable Agri-Tech, Quantum Algorithms, Molecular Medicine, and Autonomous Robotics. Projects may be individual or team-based with up to 3 members.',
       'Early bird review closes November 15, 2026. Applicants must submit a 5-page research abstract, problem statement, and experimental design prototype.'
     ],
+    keyPoints: [
+      '$2 Million grant pool opened for student innovators in STEM and sustainability.',
+      'Fully funded travel to Zurich World Summit and direct lab mentorship for finalists.',
+      'Categories encompass Agri-Tech, Quantum Algorithms, Medicine, and Robotics.'
+    ],
     studentTakeaway: 'Participation in international research olympiads builds invaluable portfolio experience and direct mentorship networks.',
     quizPrompt: 'What key section of a scientific research paper outlines the experimental procedure and variable controls?',
     hindi: {
       title: 'ग्लोबल यूथ साइंस एंड इनोवेशन ओलंपियाड 2026 के पंजीकरण शुरू, मिलेंगे $2M के रिसर्च ग्रांट्स',
       category: 'अवसर और छात्रवृत्तियां',
       summary: 'दुनिया भर के हाई स्कूल और अंडरग्रेजुएट छात्र स्वच्छ ऊर्जा, बायोटेक्नोलॉजी, क्लाइमेट इंजीनियरिंग और गणित में रिसर्च प्रोजेक्ट्स के लिए ग्रांट हेतु आवेदन कर सकते हैं।',
+      keyPoints: [
+        'स्टेम और स्थिरता में शोध करने वाले छात्रों के लिए $2M का रिसर्च फंड खोला गया।',
+        'फाइनलिस्ट्स को ज्यूरिख शिखर सम्मेलन की पूरी यात्रा और वैज्ञानिकों से मेंटरशिप मिलेगी।',
+        'एग्री-टेक, क्वांटम कंप्यूटिंग और रोबोटिक्स जैसी श्रेणियों में आवेदन आमंत्रित।'
+      ],
       content: [
         'इंटरनेशनल यूथ साइंस फाउंडेशन ने 2026 ग्लोबल ओलंपियाड के लिए आवेदन पोर्टल खोल दिया है। फाइनलिस्ट्स को ज्यूरिख वर्ल्ड समिट की पूरी फंडिंग, शीर्ष वैज्ञानिकों से मेंटरशिप और प्रोजेक्ट ग्रांट दी जाएगी।',
         'प्रतियोगिता श्रेणियों में सस्टेनेबल एग्री-टेक, क्वांटम एल्गोरिदम, मॉलिक्यूलर मेडिसिन और ऑटोनॉमस रोबोटिक्स शामिल हैं। छात्र व्यक्तिगत या 3 सदस्यों की टीम में भाग ले सकते हैं।',
@@ -291,12 +331,22 @@ export const INITIAL_NEWS: NewsArticle[] = [
       'Adaptive algorithms will calibrate question difficulty dynamically based on student mastery, eliminating test fatigue and measuring depth of conceptual comprehension.',
       'Educators recommend practicing interactive visualization tools, graph interpretation, and cross-disciplinary reasoning to prepare for the modernized testing format.'
     ],
+    keyPoints: [
+      'Standardized entrance exams transition from rote MCQs to interactive virtual lab simulations.',
+      'Adaptive algorithms tailor question difficulty dynamically to evaluate deep conceptual mastery.',
+      'Emphasis shifts to data interpretation, experimental control manipulation, and synthesis.'
+    ],
     studentTakeaway: 'Focus your revision on understanding "why" formulas work and how systems react when initial conditions change, rather than formulaic memorization.',
     quizPrompt: 'What is the key advantage of computer adaptive testing over traditional paper-based exams?',
     hindi: {
       title: 'मानकीकृत परीक्षा बोर्डों ने 2027 पाठ्यक्रम के लिए एडैप्टिव मल्टी-मोडल टेस्टिंग को दी मंजूरी',
       category: 'परीक्षा और अपडेट्स',
       summary: 'प्रमुख कॉलेज प्रवेश परीक्षाएं अब कंप्यूटर अनुकूलित मूल्यांकनों की ओर बढ़ रही हैं, जो वास्तविक समय डेटा विश्लेषण और प्रायोगिक सिमुलेशन क्षमताओं का परीक्षण करेंगी।',
+      keyPoints: [
+        'रटने वाले बहुविकल्पीय प्रश्नों की जगह इंटरैक्टिव वर्चुअल लैब सिमुलेशन लेंगे।',
+        'एडैप्टिव एल्गोरिदम छात्र के स्तर के अनुसार प्रश्नों का कठिनाई स्तर बदलेंगे।',
+        'डेटा विश्लेषण और व्यावहारिक वैज्ञानिक दृष्टिकोण पर अधिक ज़ोर दिया जाएगा।'
+      ],
       content: [
         'परीक्षा बोर्डों ने अकादमिक परीक्षाओं के अगले चरण की घोषणा की है। स्थिर बहुविकल्पीय प्रश्नों के स्थान पर अब इंटरैक्टिव लैब सिमुलेशन शामिल होंगे जहां छात्र स्क्रीन पर वैज्ञानिक परिकल्पनाओं का परीक्षण करेंगे।',
         'एडैप्टिव एल्गोरिदम छात्र के स्तर के आधार पर प्रश्नों की कठिनाई को तुरंत समायोजित करेंगे, जिससे छात्र की वास्तविक अवधारणात्मक समझ का सटीक मूल्यांकन होगा।',
@@ -319,12 +369,22 @@ export const INITIAL_NEWS: NewsArticle[] = [
       'Bioengineers are now synthesizing these enzymes using harmless yeast cultures, presenting an eco-friendly biological solution for global plastic recycling facilities.',
       'High school biochemistry students are currently modeling this enzyme in computational molecular docking competitions worldwide.'
     ],
+    keyPoints: [
+      'Deep-sea extremophile bacteria yield novel PETase enzymes breaking down plastics in under 48 hours.',
+      'Operates efficiently without high thermal energy, lowering industrial carbon footprint.',
+      'Bioengineers replicate enzyme production using harmless, scalable yeast cultures.'
+    ],
     studentTakeaway: 'Natural biodiversity holds untapped biochemical solutions for humanity’s most pressing environmental challenges.',
     quizPrompt: 'What class of biological catalysts accelerate chemical reactions by lowering activation energy?',
     hindi: {
       title: 'गहरे समुद्र के हाइड्रोथर्मल वेंट्स में मिले ऐसे एंज़ाइम जो प्लास्टिक को 48 घंटों में विघटित कर सकते हैं',
       category: 'महत्वपूर्ण खोजें',
       summary: 'अटलांटिक महासागर में हाइड्रोथर्मल वेंट्स की खोज कर रहे जीवविज्ञानियों ने ऐसे बैक्टीरिया खोजे हैं जिनके एंज़ाइम बिना अत्यधिक तापमान के 48 घंटों के भीतर PET प्लास्टिक को नष्ट कर सकते हैं।',
+      keyPoints: [
+        'गहरे समुद्र के बैक्टीरिया में प्लास्टिक को 48 घंटे में नष्ट करने वाले विशेष एंजाइम खोजे गए।',
+        'बिना अत्यधिक तापमान के काम करने से यह पर्यावरण-अनुकूल रीसाइक्लिंग तकनीक बनेगी।',
+        'यीस्ट कल्चर का उपयोग करके बड़े पैमाने पर इन एंजाइमों का उत्पादन संभव होगा।'
+      ],
       content: [
         'ज्वालामुखीय वेंट्स में रहने वाले जीव अत्यधिक खारे और खनिज युक्त वातावरण में विशेष एंज़ाइम उत्प्रेरक पैदा करके जीवित रहते हैं। आनुवंशिक अनुक्रमण से एक नए PETase वैरिएंट का पता चला है जो माइक्रोप्लास्टिक को हानिरहित घटकों में बदल देता है।',
         'बायोइंजीनियर अब हानिरहित यीस्ट कल्चर का उपयोग करके इन एंज़ाइमों का उत्पादन कर रहे हैं, जिससे प्लास्टिक रीसाइक्लिंग के लिए पर्यावरण-अनुकूल जैविक समाधान तैयार होगा।',

@@ -21,7 +21,8 @@ import {
   Palette,
   Folder,
   Eye,
-  FileDown
+  FileDown,
+  ChevronLeft
 } from 'lucide-react';
 import { StudentNotebookNote, VisualGraphData } from '../../types';
 import { Button } from '../ui/Button';
@@ -102,6 +103,9 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
   const [isGraphModalOpen, setIsGraphModalOpen] = useState(false);
   const [graphData, setGraphData] = useState<VisualGraphData | null>(activeNote?.visualGraph || null);
   const [isGeneratingGraph, setIsGeneratingGraph] = useState(false);
+
+  // Mobile viewport tab toggle (list vs note detail)
+  const [mobileTab, setMobileTab] = useState<'list' | 'detail'>('list');
 
   // Update editor fields when activeNote changes
   useEffect(() => {
@@ -190,6 +194,7 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
     setIsCreatingNew(true);
     setIsEditing(true);
     setViewMode('editor');
+    setMobileTab('detail');
     setEditTitle('');
     setEditSubject(initialSubject || (selectedSubjectFilter !== 'All' ? selectedSubjectFilter : 'Mathematics'));
     setEditContent('');
@@ -245,6 +250,9 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
 
   const handleCancelEdit = () => {
     soundEffects.playClick();
+    if (isCreatingNew && (!activeNote || !notes.length)) {
+      setMobileTab('list');
+    }
     setIsCreatingNew(false);
     setIsEditing(false);
     if (activeNote) {
@@ -323,7 +331,7 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   };
 
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -334,11 +342,13 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
 
     setIsDrawing(true);
     const rect = canvas.getBoundingClientRect();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     ctx.beginPath();
-    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.moveTo(clientX - rect.left, clientY - rect.top);
   };
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -346,11 +356,13 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
     if (!ctx) return;
 
     const rect = canvas.getBoundingClientRect();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     ctx.strokeStyle = drawingColor;
     ctx.lineWidth = brushSize;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.lineTo(clientX - rect.left, clientY - rect.top);
     ctx.stroke();
   };
 
@@ -499,7 +511,7 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
         /* Main Split Layout: Left Notes List (4 Cols) + Right Editor / Viewer (8 Cols) */
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Sidebar: Notes Directory */}
-        <div className="lg:col-span-4 space-y-4">
+        <div className={`${mobileTab === 'detail' ? 'hidden lg:block' : 'block'} lg:col-span-4 space-y-4`}>
           <div className="bg-white rounded-2xl border border-[#E1E5E1] p-4 shadow-2xs space-y-3">
             {/* Search Input & Quick Create */}
             <div className="flex items-center gap-2">
@@ -526,7 +538,7 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
               <button
                 type="button"
                 onClick={() => handleCreateNewNote()}
-                className="w-8 h-8 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#16835B] border border-emerald-200/80 flex items-center justify-center shrink-0 transition-colors shadow-2xs"
+                className="w-8 h-8 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#16835B] border border-emerald-200/80 flex items-center justify-center shrink-0 transition-colors shadow-2xs cursor-pointer"
                 title="Create Note (+)"
               >
                 <Plus className="w-4 h-4" />
@@ -539,7 +551,7 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
                 <button
                   key={s}
                   onClick={() => setSelectedSubjectFilter(s)}
-                  className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-all ${
+                  className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-all cursor-pointer ${
                     selectedSubjectFilter === s
                       ? 'bg-[#16835B] text-white shadow-2xs'
                       : 'bg-[#F4F5F1] text-[#5F6762] hover:text-[#171A18]'
@@ -577,6 +589,7 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
                         setIsCreatingNew(false);
                         setActiveNoteId(note.id);
                         setIsEditing(false);
+                        setMobileTab('detail');
                       }}
                       className={`p-3 rounded-xl border transition-all cursor-pointer group text-left relative ${
                         isActive
@@ -605,7 +618,7 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
                           <button
                             type="button"
                             onClick={(e) => handleTogglePin(note, e)}
-                            className={`p-1 rounded hover:bg-[#E1E5E1]/60 transition-colors ${
+                            className={`p-1 rounded hover:bg-[#E1E5E1]/60 transition-colors cursor-pointer ${
                               note.isPinned ? 'text-[#16835B]' : 'text-[#89918C]'
                             }`}
                             title={note.isPinned ? 'Unpin note' : 'Pin note to top'}
@@ -615,7 +628,7 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
                           <button
                             type="button"
                             onClick={(e) => handleDelete(note.id, e)}
-                            className="p-1 rounded text-[#89918C] hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                            className="p-1 rounded text-[#89918C] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                             title="Delete note"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -641,9 +654,19 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
         </div>
 
         {/* Right Area: Active Note View / Editor (8 Cols) */}
-        <div className="lg:col-span-8">
+        <div className={`${mobileTab === 'list' ? 'hidden lg:block' : 'block'} lg:col-span-8`}>
           {isCreatingNew || activeNote ? (
-            <div className="bg-white rounded-2xl border border-[#E1E5E1] shadow-2xs p-6 sm:p-7 space-y-6">
+            <div className="bg-white rounded-2xl border border-[#E1E5E1] shadow-2xs p-4 sm:p-7 space-y-5 sm:space-y-6">
+              {/* Mobile Back Button */}
+              <button
+                type="button"
+                onClick={() => setMobileTab('list')}
+                className="lg:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#16835B] border border-emerald-200/80 text-xs font-bold min-h-[38px] cursor-pointer transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>Back to Notes List</span>
+              </button>
+
               {/* Note Header & Action Buttons */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E1E5E1]">
                 <div className="min-w-0 flex-1">
@@ -976,6 +999,9 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
               onMouseMove={draw}
               onMouseUp={stopDrawing}
               onMouseLeave={stopDrawing}
+              onTouchStart={startDrawing}
+              onTouchMove={draw}
+              onTouchEnd={stopDrawing}
               className="touch-none w-full max-w-[700px] h-auto"
             />
           </div>

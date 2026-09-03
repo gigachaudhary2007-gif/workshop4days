@@ -190,25 +190,26 @@ ${currentSolution.quickSummary}`;
   return (
     <div className="space-y-6 pb-12">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-[#0F6246] border border-emerald-100 mb-2">
             <Sparkles className="w-3.5 h-3.5 text-[#16835B]" /> Socratic AI Mentorship
           </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#171A18] tracking-tight">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#171A18] tracking-tight">
             AI Doubt Solver
           </h1>
-          <p className="text-xs sm:text-sm text-[#5F6762] mt-1">
+          <p className="text-xs sm:text-sm text-[#5F6762] mt-0.5 sm:mt-1">
             Type your question or upload textbook snapshots for structured step-by-step guidance.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowHistory(!showHistory)}
             leftIcon={<History className="w-4 h-4 text-[#16835B]" />}
+            className="min-h-[40px]"
           >
             History ({doubts.length})
           </Button>
@@ -218,6 +219,7 @@ ${currentSolution.quickSummary}`;
               size="sm"
               onClick={handleNewQuestion}
               leftIcon={<RotateCcw className="w-4 h-4" />}
+              className="min-h-[40px]"
             >
               New Question
             </Button>
@@ -269,15 +271,15 @@ ${currentSolution.quickSummary}`;
               <label className="block text-xs font-bold text-[#5F6762] uppercase tracking-wider mb-2">
                 Subject
               </label>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {subjects.map((s) => (
                   <button
                     key={s}
                     type="button"
                     onClick={() => setSubject(s)}
-                    className={`text-xs px-2.5 py-1 rounded-lg transition-all font-medium ${
+                    className={`text-xs px-3 py-1.5 min-h-[36px] rounded-lg transition-all font-medium cursor-pointer ${
                       subject === s
-                        ? 'bg-[#16835B] text-white shadow-2xs'
+                        ? 'bg-[#16835B] text-white shadow-2xs font-bold'
                         : 'bg-[#F4F5F1] text-[#5F6762] hover:text-[#171A18] hover:bg-[#EAECE6]'
                     }`}
                   >
@@ -318,13 +320,14 @@ ${currentSolution.quickSummary}`;
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-between gap-3 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 pt-2">
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={handleClear}
                 disabled={isLoading || (!question && !selectedFile)}
+                className="w-full sm:w-auto min-h-[40px] justify-center"
               >
                 Clear
               </Button>
@@ -334,7 +337,7 @@ ${currentSolution.quickSummary}`;
                 size="md"
                 isLoading={isLoading}
                 rightIcon={<Send className="w-4 h-4" />}
-                className="flex-1 sm:flex-initial"
+                className="w-full sm:w-auto flex-1 min-h-[44px] justify-center shadow-[0_4px_14px_rgba(22,131,91,0.25)]"
               >
                 Solve with AI
               </Button>
@@ -391,12 +394,13 @@ ${currentSolution.quickSummary}`;
                   </h3>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleCopyAnswer}
                     leftIcon={copied ? <Check className="w-3.5 h-3.5 text-[#16835B]" /> : <Copy className="w-3.5 h-3.5" />}
+                    className="flex-1 sm:flex-initial min-h-[40px] justify-center"
                   >
                     {copied ? 'Copied' : 'Copy'}
                   </Button>
@@ -406,6 +410,7 @@ ${currentSolution.quickSummary}`;
                       size="sm"
                       onClick={handleSaveNote}
                       leftIcon={<BookmarkPlus className="w-3.5 h-3.5 text-[#16835B]" />}
+                      className="flex-1 sm:flex-initial min-h-[40px] justify-center"
                     >
                       Save to Notes
                     </Button>
@@ -419,7 +424,7 @@ ${currentSolution.quickSummary}`;
                   <BookOpen className="w-4 h-4" />
                   <span>1. Main Context</span>
                 </div>
-                <p className="text-xs sm:text-sm text-[#171A18] leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#171A18] leading-relaxed break-words">
                   {currentSolution.mainContext}
                 </p>
               </div>
@@ -432,7 +437,7 @@ ${currentSolution.quickSummary}`;
                 </div>
                 <ul className="space-y-1.5 pl-1">
                   {currentSolution.mainPoints.map((point, idx) => (
-                    <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-[#171A18] leading-relaxed">
+                    <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-[#171A18] leading-relaxed break-words">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#16835B] mt-2 shrink-0" />
                       <span>{point}</span>
                     </li>
@@ -451,21 +456,21 @@ ${currentSolution.quickSummary}`;
                   {currentSolution.stepByStepSolution.map((step: StepSolution) => (
                     <div
                       key={step.stepNumber}
-                      className="p-4 rounded-xl border border-[#E1E5E1] bg-white hover:border-[#16835B]/30 transition-colors"
+                      className="p-3.5 sm:p-4 rounded-xl border border-[#E1E5E1] bg-white hover:border-[#16835B]/30 transition-colors"
                     >
                       <div className="flex items-center gap-2 mb-1.5">
-                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-[#0F6246] text-xs font-bold flex items-center justify-center">
+                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-[#0F6246] text-xs font-bold flex items-center justify-center shrink-0">
                           {step.stepNumber}
                         </span>
                         <h4 className="text-xs sm:text-sm font-bold text-[#171A18]">
                           {step.title}
                         </h4>
                       </div>
-                      <p className="text-xs sm:text-sm text-[#5F6762] leading-relaxed pl-7">
+                      <p className="text-xs sm:text-sm text-[#5F6762] leading-relaxed pl-0 sm:pl-7 break-words">
                         {step.explanation}
                       </p>
                       {step.mathOrCode && (
-                        <div className="mt-2.5 ml-7 p-2.5 rounded-lg bg-[#F4F5F1] font-mono text-xs text-[#171A18] border border-[#E1E5E1]/80 overflow-x-auto">
+                        <div className="mt-2.5 ml-0 sm:ml-7 p-2.5 rounded-lg bg-[#F4F5F1] font-mono text-xs text-[#171A18] border border-[#E1E5E1]/80 overflow-x-auto break-all sm:break-normal">
                           {step.mathOrCode}
                         </div>
                       )}

@@ -570,6 +570,267 @@ Return JSON with:
   }
 });
 
+// Cache in memory for news
+let cachedNewsArticles: any[] = [];
+let lastNewsFetchTime = 0;
+const NEWS_CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
+
+// Live Newspaper & Academic Wire Feed
+app.get("/api/news", async (req, res) => {
+  try {
+    const isRefresh = req.query.refresh === "true";
+    const forceError = req.query.force_error === "true";
+
+    if (forceError) {
+      return res.status(500).json({
+        error: "Simulated live news API failure for error-state testing."
+      });
+    }
+
+    const now = Date.now();
+    if (!isRefresh && cachedNewsArticles.length > 0 && now - lastNewsFetchTime < NEWS_CACHE_DURATION) {
+      return res.json({
+        articles: cachedNewsArticles,
+        source: "cache",
+        timestamp: new Date(lastNewsFetchTime).toISOString(),
+      });
+    }
+
+    const ai = getGeminiClient();
+    if (!ai) {
+      return res.status(503).json({
+        error: "Gemini API service key not available to fetch live news feeds."
+      });
+    }
+
+    const promptText = `You are the Chief Academic Editor and Science Journalist for Study to Shine, an educational platform for secondary and university students.
+Generate 6 to 7 compelling, contemporary, pedagogically inspiring, and authentic news articles suitable for students.
+Cover diverse categories: 'Science & Tech', 'Space', 'AI & Tech', 'Education', 'Discoveries', 'Opportunities', 'Exams & Updates'.
+Mark exactly ONE high-impact story as featured (featured: true).
+
+For each article provide:
+- id: unique string e.g. "news-live-1", "news-live-2", etc.
+- title: clear, engaging academic headline
+- category: one of 'Education' | 'Science & Tech' | 'Space' | 'AI & Tech' | 'Discoveries' | 'Opportunities' | 'Exams & Updates' | 'Global Affairs'
+- source: reputable academic/scientific source (e.g. 'Nature Physics & Global Wire', 'NASA & ESA Newsroom', 'MIT Technology Review', 'International Youth Science Foundation')
+- date: formatted current date string e.g. "Sep 3, 2026"
+- readTime: e.g. "4 min read"
+- summary: a concise, student-friendly 2-3 sentence overview
+- keyPoints: array of 3 clear, crisp bullet points highlighting the essential takeaways
+- content: array of 3-4 detailed paragraphs explaining the science, discovery, or opportunity
+- studentTakeaway: 1-2 sentence core academic takeaway or curriculum link
+- quizPrompt: a thought-provoking Socratic reflection question for the student
+- badge: optional short badge string (e.g. 'Breaking Discovery', 'Global Grant', 'Editor Choice')
+- featured: boolean (true for one major story, false for others)
+- hindi: object with accurate, high quality Hindi translations for:
+  - title (in Devanagari Hindi)
+  - category (in Devanagari Hindi)
+  - summary (in Devanagari Hindi)
+  - keyPoints (array of 3 bullet points in Devanagari Hindi)
+  - content (array of 3-4 translated paragraphs in Devanagari Hindi)
+  - studentTakeaway (in Devanagari Hindi)
+  - quizPrompt (in Devanagari Hindi)
+
+Output valid JSON matching the schema.`;
+
+    const modelsToTry = ["gemini-3.8-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
+    let responseText = "";
+    let lastError: any = null;
+
+    for (const model of modelsToTry) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: promptText,
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                articles: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      id: { type: Type.STRING },
+                      title: { type: Type.STRING },
+                      category: { type: Type.STRING },
+                      source: { type: Type.STRING },
+                      date: { type: Type.STRING },
+                      readTime: { type: Type.STRING },
+                      summary: { type: Type.STRING },
+                      keyPoints: {
+                        type: Type.ARRAY,
+                        items: { type: Type.STRING },
+                      },
+                      content: {
+                        type: Type.ARRAY,
+                        items: { type: Type.STRING },
+                      },
+                      studentTakeaway: { type: Type.STRING },
+                      quizPrompt: { type: Type.STRING },
+                      badge: { type: Type.STRING },
+                      featured: { type: Type.BOOLEAN },
+                      hindi: {
+                        type: Type.OBJECT,
+                        properties: {
+                          title: { type: Type.STRING },
+                          category: { type: Type.STRING },
+                          summary: { type: Type.STRING },
+                          keyPoints: {
+                            type: Type.ARRAY,
+                            items: { type: Type.STRING },
+                          },
+                          content: {
+                            type: Type.ARRAY,
+                            items: { type: Type.STRING },
+                          },
+                          studentTakeaway: { type: Type.STRING },
+                          quizPrompt: { type: Type.STRING },
+                        },
+                        required: ["title", "category", "summary", "content", "studentTakeaway"],
+                      },
+                    },
+                    required: ["id", "title", "category", "source", "date", "readTime", "summary", "content", "studentTakeaway"],
+                  },
+                },
+              },
+              required: ["articles"],
+            },
+          },
+        });
+
+        if (response && response.text) {
+          responseText = response.text;
+          break;
+        }
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`Model ${model} news request failed, trying next model in cascade:`, err?.message || err);
+      }
+    }
+
+    if (!responseText) {
+      throw new Error(lastError?.message || "Empty response received from Gemini.");
+    }
+
+    const cleanedText = responseText
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```$/i, "")
+      .trim();
+
+    const parsed = JSON.parse(cleanedText || "{}");
+    const articles = Array.isArray(parsed.articles) ? parsed.articles : [];
+
+    if (articles.length === 0) {
+      return res.status(502).json({
+        error: "News feed service returned an empty response. Please try refreshing."
+      });
+    }
+
+    cachedNewsArticles = articles;
+    lastNewsFetchTime = now;
+
+    return res.json({
+      articles,
+      source: "live",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    console.error("Error fetching news:", error);
+    return res.status(500).json({
+      error: "Failed to fetch live student news. " + (error?.message || "Internal server error"),
+      details: error?.message || String(error),
+    });
+  }
+});
+
+// Summarize / Translate News Article Endpoint
+app.post("/api/news/summarize", async (req, res) => {
+  try {
+    const { title, content, summary, language = "en" } = req.body;
+
+    if (!title && !summary && !content) {
+      return res.status(400).json({ error: "Missing article text to summarize." });
+    }
+
+    const ai = getGeminiClient();
+    if (!ai) {
+      return res.status(503).json({ error: "Gemini AI client not available." });
+    }
+
+    const langPrompt = language === "hi" ? "in clear, natural Hindi (Devanagari script)" : "in clear, accessible English";
+    const promptText = `You are an educational summarizer for students.
+Summarize the following student news article ${langPrompt}:
+Title: ${title}
+Summary: ${summary}
+Content: ${Array.isArray(content) ? content.join("\n") : content}
+
+Provide:
+1. summary: A student-friendly 2-3 sentence overview ${langPrompt}.
+2. keyPoints: Array of 3-4 concise, high-impact bullet points highlighting key learnings ${langPrompt}.
+3. studentTakeaway: 1-2 sentence core curriculum/academic takeaway ${langPrompt}.
+4. explanation: A simple, conversational explanation connecting this discovery to school science/math/humanities concepts.`;
+
+    const modelsToTry = ["gemini-3.8-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
+    let responseText = "";
+    let lastError: any = null;
+
+    for (const model of modelsToTry) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: promptText,
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                summary: { type: Type.STRING },
+                keyPoints: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING },
+                },
+                studentTakeaway: { type: Type.STRING },
+                explanation: { type: Type.STRING },
+              },
+              required: ["summary", "keyPoints", "studentTakeaway", "explanation"],
+            },
+          },
+        });
+
+        if (response && response.text) {
+          responseText = response.text;
+          break;
+        }
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`Model ${model} news summary request failed, trying next:`, err?.message || err);
+      }
+    }
+
+    if (!responseText) {
+      throw new Error(lastError?.message || "Empty response received from Gemini.");
+    }
+
+    const cleanedText = responseText
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```$/i, "")
+      .trim();
+
+    const parsed = JSON.parse(cleanedText || "{}");
+    return res.json(parsed);
+  } catch (error: any) {
+    console.error("Error summarizing news:", error);
+    return res.status(500).json({
+      error: "Failed to generate AI summary.",
+      details: error?.message || String(error),
+    });
+  }
+});
+
 // Vite middleware or static serving
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {

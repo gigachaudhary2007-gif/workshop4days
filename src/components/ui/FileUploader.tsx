@@ -111,8 +111,9 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
               if (inputRef.current) inputRef.current.value = '';
               onClear?.();
             }}
-            className="p-1.5 rounded-lg text-[#89918C] hover:text-rose-600 hover:bg-rose-50 transition-colors ml-2"
+            className="p-2 min-w-[36px] min-h-[36px] sm:min-w-[40px] sm:min-h-[40px] flex items-center justify-center rounded-lg text-[#89918C] hover:text-rose-600 hover:bg-rose-50 transition-colors ml-2 cursor-pointer"
             title="Remove file"
+            aria-label="Remove uploaded file"
           >
             <X className="w-4 h-4" />
           </button>
@@ -123,23 +124,23 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => inputRef.current?.click()}
-          className={`flex flex-col items-center justify-center p-5 sm:p-6 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${
+          className={`flex flex-col items-center justify-center p-4 sm:p-6 border-2 border-dashed rounded-2xl cursor-pointer transition-all active:scale-[0.99] ${
             isDragging
               ? 'border-[#16835B] bg-emerald-50/50 scale-[0.99]'
               : 'border-[#E1E5E1] bg-[#F8F9F6]/80 hover:bg-white hover:border-[#16835B]/40'
           }`}
         >
-          <div className="w-11 h-11 rounded-xl bg-white border border-[#E1E5E1] flex items-center justify-center text-[#16835B] shadow-sm mb-2.5">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white border border-[#E1E5E1] flex items-center justify-center text-[#16835B] shadow-sm mb-2">
             <UploadCloud className="w-5 h-5" />
           </div>
           <p className="text-xs sm:text-sm font-semibold text-[#171A18] text-center">
             {label}
           </p>
-          <p className="text-[11px] sm:text-xs text-[#89918C] text-center mt-1">
+          <p className="text-[11px] sm:text-xs text-[#89918C] text-center mt-0.5 sm:mt-1">
             {sublabel}
           </p>
-          <span className="mt-2.5 text-[11px] font-medium text-[#16835B] bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
-            Click to browse or drag & drop
+          <span className="mt-2 text-[11px] font-medium text-[#16835B] bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+            Tap to browse or take photo
           </span>
         </div>
       )}

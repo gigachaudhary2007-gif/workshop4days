@@ -132,10 +132,10 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   return (
     <div className="space-y-8 pb-16">
       {/* Top Welcome Header - Liquid Glass with Greeting & Learning Streak */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 sm:p-8 rounded-[28px] liquid-glass-card">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 p-4 sm:p-6 lg:p-8 rounded-[24px] sm:rounded-[28px] liquid-glass-card">
         <div>
           {/* Animated Emoji Button for Vishal */}
-          <div className="mb-3.5">
+          <div className="mb-2 sm:mb-3.5">
             <AnimatedEmojiButton
               emoji="👋"
               label={`Hey ${user.name.split(' ')[0] || 'Vishal'}!`}
@@ -144,17 +144,17 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
               showWavingArcs={true}
             />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#171A18] tracking-tight">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#171A18] tracking-tight">
             What do you want to learn today?
           </h1>
-          <p className="text-sm sm:text-base text-[#5F6762] mt-1.5 font-medium max-w-xl">
+          <p className="text-xs sm:text-sm md:text-base text-[#5F6762] mt-1 sm:mt-1.5 font-medium max-w-xl">
             Continue your personalized study plan, solve doubts, and review today's lessons.
           </p>
         </div>
 
         {/* Learning Streak Liquid Glass Card (from reference screenshot) */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-white/70 backdrop-blur-xl border border-white/90 shadow-[0_4px_20px_rgba(22,131,91,0.06)] min-w-[260px] sm:min-w-[280px]">
-          <div className="flex items-center justify-between mb-2.5">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-white/70 backdrop-blur-xl border border-white/90 shadow-[0_4px_20px_rgba(22,131,91,0.06)] w-full md:w-auto md:min-w-[260px]">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#16835B] to-[#10E862] flex items-center justify-center text-white shadow-[0_4px_12px_rgba(22,131,91,0.25)]">
                 <Flame className="w-4 h-4 text-white fill-white/20" />
@@ -164,7 +164,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 <p className="text-[10px] text-[#5F6762]">Consistent practice</p>
               </div>
             </div>
-            <span className="text-lg font-black text-[#16835B]">
+            <span className="text-base sm:text-lg font-black text-[#16835B]">
               {user.streakDays || 5} Days
             </span>
           </div>
@@ -247,13 +247,13 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 shrink-0 w-full sm:w-auto">
             <Button
               variant="primary"
               size="md"
               onClick={() => onNavigate('ai-notes')}
               leftIcon={<Volume2 className="w-4 h-4" />}
-              className="shadow-[0_4px_16px_rgba(22,131,91,0.35)]"
+              className="shadow-[0_4px_16px_rgba(22,131,91,0.35)] w-full sm:w-auto justify-center min-h-[44px]"
             >
               Play Notes Lecture
             </Button>
@@ -261,7 +261,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
               variant="outline"
               size="md"
               onClick={() => onNavigate('news-paper')}
-              className="border-[#2B3B30] text-emerald-300 hover:bg-white/10"
+              className="border-[#2B3B30] text-emerald-300 hover:bg-white/10 w-full sm:w-auto justify-center min-h-[44px]"
             >
               Open Hindi / English News
             </Button>

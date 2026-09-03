@@ -173,8 +173,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           </div>
 
-          <div className="flex justify-end pt-2">
-            <Button type="submit">
+          <div className="flex flex-col sm:flex-row justify-end pt-2 gap-2">
+            <Button type="submit" className="w-full sm:w-auto min-h-[44px]">
               Save Preferences
             </Button>
           </div>
@@ -188,13 +188,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <p className="text-xs text-[#5F6762]">
             Need to clear recent session state or start fresh with sample doubts and notes?
           </p>
-          <div className="flex items-center gap-3 pt-1">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={onResetData}
               leftIcon={<Trash2 className="w-3.5 h-3.5 text-rose-600" />}
+              className="min-h-[44px] justify-center"
             >
               Reset Session Data
             </Button>
@@ -203,7 +204,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               variant="ghost"
               size="sm"
               onClick={onLogout}
-              className="text-rose-600 hover:bg-rose-50"
+              className="text-rose-600 hover:bg-rose-50 min-h-[44px] justify-center"
             >
               Sign Out
             </Button>

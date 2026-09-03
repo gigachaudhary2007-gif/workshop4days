@@ -413,13 +413,13 @@ export const AudioTeacherPlayer: React.FC<AudioTeacherPlayerProps> = ({
       )}
 
       {/* Main Playback Bar Controls */}
-      <div className="pt-3 border-t border-[#243329] flex items-center justify-between relative z-10">
-        <div className="flex items-center gap-2">
+      <div className="pt-3 border-t border-[#243329] flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={handlePrevChapter}
             disabled={currentChapterIndex === 0 && elapsedSeconds === 0}
-            className="px-2.5 py-1.5 rounded-xl bg-[#1B2920] hover:bg-[#25382B] disabled:opacity-40 disabled:cursor-not-allowed border border-[#2B4233] text-xs font-semibold text-zinc-300 transition-all cursor-pointer"
+            className="px-3 py-2 min-h-[44px] rounded-xl bg-[#1B2920] hover:bg-[#25382B] disabled:opacity-40 disabled:cursor-not-allowed border border-[#2B4233] text-xs font-semibold text-zinc-300 transition-all cursor-pointer flex-1 sm:flex-initial flex items-center justify-center"
           >
             {language === 'hi' ? 'पिछला' : 'Previous'}
           </button>
@@ -427,7 +427,7 @@ export const AudioTeacherPlayer: React.FC<AudioTeacherPlayerProps> = ({
           <button
             type="button"
             onClick={handleTogglePlay}
-            className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#10E862] hover:bg-[#0fd258] active:scale-95 text-[#0A120D] font-extrabold text-xs sm:text-sm shadow-[0_0_16px_rgba(16,232,98,0.35)] transition-all cursor-pointer"
+            className="flex items-center justify-center gap-2 px-5 py-2 min-h-[44px] rounded-xl bg-[#10E862] hover:bg-[#0fd258] active:scale-95 text-[#0A120D] font-extrabold text-xs sm:text-sm shadow-[0_0_16px_rgba(16,232,98,0.35)] transition-all cursor-pointer flex-2 sm:flex-initial"
           >
             {isPlaying ? (
               <>
@@ -437,7 +437,7 @@ export const AudioTeacherPlayer: React.FC<AudioTeacherPlayerProps> = ({
             ) : (
               <>
                 <Play className="w-4 h-4 fill-[#0A120D]" />
-                <span>
+                <span className="truncate">
                   {isPaused
                     ? language === 'hi'
                       ? 'पुनः शुरू करें'
@@ -454,15 +454,17 @@ export const AudioTeacherPlayer: React.FC<AudioTeacherPlayerProps> = ({
             type="button"
             onClick={handleNextChapter}
             disabled={currentChapterIndex >= chapters.length - 1}
-            className="px-2.5 py-1.5 rounded-xl bg-[#1B2920] hover:bg-[#25382B] disabled:opacity-40 disabled:cursor-not-allowed border border-[#2B4233] text-xs font-semibold text-zinc-300 transition-all cursor-pointer"
+            className="px-3 py-2 min-h-[44px] rounded-xl bg-[#1B2920] hover:bg-[#25382B] disabled:opacity-40 disabled:cursor-not-allowed border border-[#2B4233] text-xs font-semibold text-zinc-300 transition-all cursor-pointer flex-1 sm:flex-initial flex items-center justify-center"
           >
             {language === 'hi' ? 'अगला' : 'Next'}
           </button>
         </div>
 
-        <div className="text-[11px] text-[#89918C] font-semibold flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-[#10E862] animate-ping" />
-          <span>{isPlaying ? (language === 'hi' ? 'बोल रहा है...' : 'Narrating...') : (language === 'hi' ? 'तैयार' : 'Ready')}</span>
+        <div className="text-[11px] text-[#89918C] font-semibold flex items-center justify-between sm:justify-start gap-1.5 self-center sm:self-auto">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#10E862] animate-ping" />
+            <span>{isPlaying ? (language === 'hi' ? 'बोल रहा है...' : 'Narrating...') : (language === 'hi' ? 'तैयार' : 'Ready')}</span>
+          </div>
         </div>
       </div>
     </div>

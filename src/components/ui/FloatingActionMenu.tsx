@@ -61,7 +61,7 @@ export const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
   ];
 
   return (
-    <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end pointer-events-none select-none">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex flex-col items-end pointer-events-none select-none">
       {/* Floating Staggered Action Items (Liquid Glass Style) */}
       <AnimatePresence>
         {isOpen && (

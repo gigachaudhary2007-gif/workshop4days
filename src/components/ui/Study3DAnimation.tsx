@@ -302,7 +302,7 @@ export const Study3DAnimation: React.FC<Study3DAnimationProps> = ({ className = 
       <div className="absolute bottom-0 inset-x-0 h-1/3 bg-[radial-gradient(ellipse_at_50%_100%,rgba(22,131,91,0.12),transparent_75%)] pointer-events-none" />
 
       {/* 3D WebGL Canvas Container - pure animation with no text or badges */}
-      <div ref={containerRef} className="w-full h-full pointer-events-auto" />
+      <div ref={containerRef} className="w-full h-full pointer-events-auto touch-pan-y overflow-hidden" />
     </div>
   );
 };
