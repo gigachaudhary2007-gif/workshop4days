@@ -17,6 +17,7 @@ import {
   DoubtDocument,
   StudyActivityDocument,
   AnalyzedNoteRecord,
+  StudentNotebookNote,
 } from '../types';
 
 /**
@@ -67,6 +68,102 @@ export async function updateUserProfile(
  * ============================================================================
  */
 
+export async function saveUserNotebookNote(
+  userId: string,
+  note: StudentNotebookNote
+): Promise<void> {
+  if (!userId) throw new Error('User must be logged in to save notes.');
+  const noteId = note.id || `note_${Date.now()}`;
+  const noteRef = doc(db, 'users', userId, 'notes', noteId);
+
+  const now = new Date().toISOString();
+  const noteDoc: Record<string, any> = {
+    noteId,
+    id: noteId,
+    userId,
+    title: note.title.trim(),
+    subject: note.subject || 'General',
+    content: note.content || note.textContent || '',
+    tags: Array.isArray(note.tags) ? note.tags : [],
+    isPinned: Boolean(note.isPinned),
+    folder: note.folder || '',
+    updatedAt: now,
+  };
+
+  if (note.createdAt) {
+    noteDoc.createdAt = note.createdAt;
+  } else {
+    noteDoc.createdAt = now;
+  }
+
+  if (note.drawingDataUrl) {
+    noteDoc.drawingDataUrl = note.drawingDataUrl;
+  }
+  if (note.visualGraph) {
+    noteDoc.visualGraph = note.visualGraph;
+  }
+
+  await setDoc(noteRef, noteDoc, { merge: true });
+}
+
+export async function getUserNotebookNotes(userId: string): Promise<StudentNotebookNote[]> {
+  if (!userId) return [];
+  const notesCol = collection(db, 'users', userId, 'notes');
+  try {
+    const q = query(notesCol, orderBy('updatedAt', 'desc'));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => {
+      const data = d.data();
+      const content = data.content || data.textContent || '';
+      return {
+        id: data.noteId || data.id || d.id,
+        title: data.title || 'Untitled Note',
+        subject: data.subject || 'General',
+        content,
+        textContent: content,
+        tags: Array.isArray(data.tags) ? data.tags : [],
+        isPinned: Boolean(data.isPinned),
+        folder: data.folder || '',
+        drawingDataUrl: data.drawingDataUrl || undefined,
+        visualGraph: data.visualGraph || undefined,
+        createdAt: data.createdAt || '',
+        updatedAt: data.updatedAt
+          ? new Date(data.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          : 'Recently',
+      };
+    });
+  } catch {
+    // Fallback without orderBy if index is pending
+    const snap = await getDocs(notesCol);
+    return snap.docs.map((d) => {
+      const data = d.data();
+      const content = data.content || data.textContent || '';
+      return {
+        id: data.noteId || data.id || d.id,
+        title: data.title || 'Untitled Note',
+        subject: data.subject || 'General',
+        content,
+        textContent: content,
+        tags: Array.isArray(data.tags) ? data.tags : [],
+        isPinned: Boolean(data.isPinned),
+        folder: data.folder || '',
+        drawingDataUrl: data.drawingDataUrl || undefined,
+        visualGraph: data.visualGraph || undefined,
+        createdAt: data.createdAt || '',
+        updatedAt: data.updatedAt
+          ? new Date(data.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          : 'Recently',
+      };
+    });
+  }
+}
+
+export async function deleteUserNotebookNote(userId: string, noteId: string): Promise<void> {
+  if (!userId || !noteId) throw new Error('userId and noteId are required');
+  const noteRef = doc(db, 'users', userId, 'notes', noteId);
+  await deleteDoc(noteRef);
+}
+
 export async function createNote(
   userId: string,
   noteData: Omit<NoteDocument, 'userId' | 'createdAt' | 'updatedAt'> & {
@@ -81,10 +178,17 @@ export async function createNote(
   const now = new Date().toISOString();
   const note: NoteDocument = {
     noteId,
+    id: noteId,
     userId,
     title: noteData.title,
+    subject: noteData.subject || 'General',
     content: noteData.content,
+    tags: noteData.tags || [],
+    isPinned: Boolean(noteData.isPinned),
+    folder: noteData.folder || '',
     originalFileUrl: noteData.originalFileUrl || '',
+    drawingDataUrl: noteData.drawingDataUrl,
+    visualGraph: noteData.visualGraph,
     createdAt: noteData.createdAt || now,
     updatedAt: noteData.updatedAt || now,
   };

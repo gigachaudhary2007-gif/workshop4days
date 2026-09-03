@@ -26,6 +26,9 @@ import {
   saveUserAiNote,
   getUserAiNotes,
   deleteUserAiNote,
+  saveUserNotebookNote,
+  getUserNotebookNotes,
+  deleteUserNotebookNote,
   logStudyActivity,
 } from './services/databaseService';
 
@@ -74,16 +77,9 @@ function AppContent() {
     return initialNotes;
   });
 
+  const [isLoadingNotebookNotes, setIsLoadingNotebookNotes] = useState(false);
   const [notebookNotes, setNotebookNotes] = useState<StudentNotebookNote[]>(() => {
-    const saved = localStorage.getItem('sts_notebook');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return initialNotebookNotes;
-      }
-    }
-    return initialNotebookNotes;
+    return [];
   });
 
   // Cross-view selection handoffs
@@ -160,9 +156,50 @@ function AppContent() {
     localStorage.setItem(userAiKey, JSON.stringify(aiNotes));
   }, [aiNotes, currentUser?.id]);
 
+  // User-isolated Notebook notes state & persistence with Firestore cloud retrieval
   useEffect(() => {
-    localStorage.setItem('sts_notebook', JSON.stringify(notebookNotes));
-  }, [notebookNotes]);
+    const userNotebookKey = currentUser?.id ? `sts_notebook_${currentUser.id}` : 'sts_notebook_guest';
+    const saved = localStorage.getItem(userNotebookKey);
+    if (saved) {
+      try {
+        setNotebookNotes(JSON.parse(saved));
+      } catch {
+        setNotebookNotes([]);
+      }
+    } else {
+      setNotebookNotes([]);
+    }
+
+    if (currentUser?.id) {
+      setIsLoadingNotebookNotes(true);
+      getUserNotebookNotes(currentUser.id)
+        .then((firestoreNotes) => {
+          if (firestoreNotes && firestoreNotes.length > 0) {
+            setNotebookNotes((prev) => {
+              const map = new Map<string, StudentNotebookNote>();
+              prev.forEach((n) => map.set(n.id, n));
+              firestoreNotes.forEach((n) => map.set(n.id, n));
+              const merged = Array.from(map.values());
+              localStorage.setItem(userNotebookKey, JSON.stringify(merged));
+              return merged;
+            });
+          }
+        })
+        .catch((err) => {
+          console.warn('Could not sync user notebook notes from Firestore:', err);
+        })
+        .finally(() => {
+          setIsLoadingNotebookNotes(false);
+        });
+    }
+  }, [currentUser?.id]);
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      const userNotebookKey = `sts_notebook_${currentUser.id}`;
+      localStorage.setItem(userNotebookKey, JSON.stringify(notebookNotes));
+    }
+  }, [notebookNotes, currentUser?.id]);
 
   // Handlers
   const handleAuthenticate = (user: User) => {
@@ -237,12 +274,31 @@ function AppContent() {
     }
   };
 
-  const handleSaveNotebookNote = (newNote: StudentNotebookNote) => {
+  const handleSaveNotebookNote = async (newNote: StudentNotebookNote) => {
     setNotebookNotes((prev) => [newNote, ...prev.filter((n) => n.id !== newNote.id)]);
+    if (currentUser?.id) {
+      try {
+        await saveUserNotebookNote(currentUser.id, newNote);
+        await logStudyActivity(currentUser.id, `Notebook: ${newNote.title}`);
+      } catch (err: any) {
+        console.error('Could not sync note to Firestore:', err);
+        showToast(err?.message || 'Failed to save note to cloud.', 'error');
+        throw err;
+      }
+    }
   };
 
-  const handleDeleteNotebookNote = (id: string) => {
+  const handleDeleteNotebookNote = async (id: string) => {
     setNotebookNotes((prev) => prev.filter((n) => n.id !== id));
+    if (currentUser?.id) {
+      try {
+        await deleteUserNotebookNote(currentUser.id, id);
+      } catch (err: any) {
+        console.error('Could not delete note from Firestore:', err);
+        showToast(err?.message || 'Failed to delete note from cloud.', 'error');
+        throw err;
+      }
+    }
   };
 
   const handleExportToNotebook = (title: string, content: string, subject: string) => {
@@ -253,9 +309,11 @@ function AppContent() {
       content,
       tags: ['AI-Imported', subject],
       isPinned: false,
-      updatedAt: 'Just now',
+      updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      createdAt: new Date().toISOString(),
     };
     handleSaveNotebookNote(newNote);
+    setActiveNotebookNoteId(newNote.id);
   };
 
   // While restoring auth state from Firebase on page load/refresh
@@ -391,6 +449,8 @@ function AppContent() {
                   initialActiveNoteId={activeNotebookNoteId}
                   onSaveNote={handleSaveNotebookNote}
                   onDeleteNote={handleDeleteNotebookNote}
+                  currentUser={currentUser}
+                  isLoadingNotes={isLoadingNotebookNotes}
                 />
               )}
 

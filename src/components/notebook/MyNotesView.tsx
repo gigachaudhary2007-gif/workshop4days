@@ -35,9 +35,11 @@ import { soundEffects } from '../../utils/soundEffects';
 
 interface MyNotesViewProps {
   notes: StudentNotebookNote[];
-  onSaveNote: (note: StudentNotebookNote) => void;
-  onDeleteNote: (id: string) => void;
+  onSaveNote: (note: StudentNotebookNote) => Promise<void> | void;
+  onDeleteNote: (id: string) => Promise<void> | void;
   initialActiveNoteId?: string | null;
+  currentUser?: any;
+  isLoadingNotes?: boolean;
 }
 
 export const MyNotesView: React.FC<MyNotesViewProps> = ({
@@ -45,30 +47,48 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
   onSaveNote,
   onDeleteNote,
   initialActiveNoteId,
+  currentUser,
+  isLoadingNotes = false,
 }) => {
   const { showToast } = useToast();
 
-  const [activeNoteId, setActiveNoteId] = useState<string>(initialActiveNoteId || notes[0]?.id || '');
+  const [activeNoteId, setActiveNoteId] = useState<string>(initialActiveNoteId || (notes[0]?.id || ''));
   const [viewMode, setViewMode] = useState<'editor' | 'folders'>('editor');
   const [selectedFolderForModal, setSelectedFolderForModal] = useState<StudyFolderData | null>(null);
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (initialActiveNoteId) {
       setActiveNoteId(initialActiveNoteId);
+      setIsCreatingNew(false);
     }
   }, [initialActiveNoteId]);
+
+  // Keep activeNoteId synced when notes list changes
+  useEffect(() => {
+    if (activeNoteId) {
+      const exists = notes.some((n) => n.id === activeNoteId);
+      if (!exists && notes.length > 0) {
+        setActiveNoteId(notes[0].id);
+      }
+    } else if (notes.length > 0) {
+      setActiveNoteId(notes[0].id);
+    }
+  }, [notes, activeNoteId]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState('All');
   const [isEditing, setIsEditing] = useState(false);
 
   // Editor states for active note
-  const activeNote = notes.find((n) => n.id === activeNoteId) || notes[0];
+  const activeNote = notes.find((n) => n.id === activeNoteId) || (notes.length > 0 ? notes[0] : null);
 
   const [editTitle, setEditTitle] = useState(activeNote?.title || '');
   const [editSubject, setEditSubject] = useState(activeNote?.subject || 'General');
   const [editContent, setEditContent] = useState(activeNote?.content || activeNote?.textContent || '');
   const [editTags, setEditTags] = useState<string>(activeNote?.tags?.join(', ') || '');
-  const [isPinned, setIsPinned] = useState(activeNote?.isPinned || false);
+  const [isPinned, setIsPinned] = useState(Boolean(activeNote?.isPinned));
 
   // Drawing Canvas Modal State
   const [isDrawingModalOpen, setIsDrawingModalOpen] = useState(false);
@@ -85,15 +105,15 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
 
   // Update editor fields when activeNote changes
   useEffect(() => {
-    if (activeNote) {
-      setEditTitle(activeNote.title);
-      setEditSubject(activeNote.subject);
+    if (activeNote && !isCreatingNew) {
+      setEditTitle(activeNote.title || '');
+      setEditSubject(activeNote.subject || 'General');
       setEditContent(activeNote.content || activeNote.textContent || '');
       setEditTags(activeNote.tags ? activeNote.tags.join(', ') : '');
-      setIsPinned(activeNote.isPinned || false);
+      setIsPinned(Boolean(activeNote.isPinned));
       setGraphData(activeNote.visualGraph || null);
     }
-  }, [activeNoteId]);
+  }, [activeNoteId, activeNote, isCreatingNew]);
 
   const subjects = ['All', 'Mathematics', 'Physics', 'Biology', 'Chemistry', 'Computer Science', 'General'];
 
@@ -136,90 +156,152 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
     },
   ];
 
-  // Filter notes
+  // Filter notes by search and subject
   const filteredNotes = notes.filter((n) => {
     const noteText = (n.content || n.textContent || '');
     const matchSubject = selectedSubjectFilter === 'All' || n.subject === selectedSubjectFilter;
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return matchSubject;
     const matchQuery =
-      n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      noteText.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      n.tags?.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
+      n.title.toLowerCase().includes(query) ||
+      n.subject.toLowerCase().includes(query) ||
+      noteText.toLowerCase().includes(query) ||
+      (n.tags && n.tags.some((t) => t.toLowerCase().includes(query)));
     return matchSubject && matchQuery;
   });
 
-  // Sort pinned first
+  const parseNoteDate = (d?: string) => {
+    if (!d || d === 'Just now') return Date.now();
+    const time = new Date(d).getTime();
+    return isNaN(time) ? 0 : time;
+  };
+
+  // Sort pinned first, then by date descending
   const sortedNotes = [...filteredNotes].sort((a, b) => {
-    if (a.isPinned && !b.isPinned) return -1;
-    if (!a.isPinned && b.isPinned) return 1;
-    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    if (Boolean(a.isPinned) && !Boolean(b.isPinned)) return -1;
+    if (!Boolean(a.isPinned) && Boolean(b.isPinned)) return 1;
+    const timeA = parseNoteDate(a.updatedAt || a.createdAt);
+    const timeB = parseNoteDate(b.updatedAt || b.createdAt);
+    return timeB - timeA;
   });
 
-  const handleCreateNewNote = () => {
-    const newNote: StudentNotebookNote = {
-      id: 'note-' + Date.now(),
-      title: 'Untitled Note',
-      subject: selectedSubjectFilter !== 'All' ? selectedSubjectFilter : 'Mathematics',
-      content: '# New Study Session\n\n- Key concepts:\n- Formulas:\n- Questions for teacher:\n',
-      tags: ['Study'],
-      isPinned: false,
-      updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    };
-    onSaveNote(newNote);
-    setActiveNoteId(newNote.id);
+  const handleCreateNewNote = (initialSubject?: string) => {
+    soundEffects.playPop();
+    setIsCreatingNew(true);
     setIsEditing(true);
-    showToast('New note created in your notebook!');
+    setViewMode('editor');
+    setEditTitle('');
+    setEditSubject(initialSubject || (selectedSubjectFilter !== 'All' ? selectedSubjectFilter : 'Mathematics'));
+    setEditContent('');
+    setEditTags('');
+    setIsPinned(false);
+    setGraphData(null);
   };
 
-  const handleSaveActiveNote = () => {
-    if (!activeNote) return;
-    const updated: StudentNotebookNote = {
-      ...activeNote,
-      title: editTitle.trim() || 'Untitled Note',
+  const handleSaveActiveNote = async () => {
+    if (!editTitle.trim()) {
+      showToast('Note title cannot be empty. Please enter a title.', 'error');
+      return;
+    }
+    if (!editContent.trim()) {
+      showToast('Note content cannot be empty. Please write some content.', 'error');
+      return;
+    }
+
+    setIsSaving(true);
+    const noteId = isCreatingNew ? `note_${Date.now()}` : (activeNote?.id || `note_${Date.now()}`);
+    const now = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    
+    const noteToSave: StudentNotebookNote = {
+      id: noteId,
+      title: editTitle.trim(),
       subject: editSubject,
-      content: editContent,
+      content: editContent.trim(),
+      textContent: editContent.trim(),
       tags: editTags
         .split(',')
-        .map((t) => t.trim())
+        .map((t) => t.trim().replace(/^#/, ''))
         .filter(Boolean),
       isPinned,
-      visualGraph: graphData || undefined,
-      updatedAt: 'Just now',
+      drawingDataUrl: isCreatingNew ? undefined : activeNote?.drawingDataUrl,
+      visualGraph: graphData || (!isCreatingNew ? activeNote?.visualGraph : undefined),
+      createdAt: (!isCreatingNew && activeNote?.createdAt) ? activeNote.createdAt : new Date().toISOString(),
+      updatedAt: now,
     };
-    onSaveNote(updated);
-    setIsEditing(false);
-    showToast('Note changes saved!');
+
+    try {
+      await onSaveNote(noteToSave);
+      soundEffects.playSuccess();
+      setActiveNoteId(noteToSave.id);
+      setIsEditing(false);
+      setIsCreatingNew(false);
+      showToast(isCreatingNew ? 'Note created and saved to notebook!' : 'Note updated successfully!');
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to save note.', 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleTogglePin = (note: StudentNotebookNote, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleCancelEdit = () => {
+    soundEffects.playClick();
+    setIsCreatingNew(false);
+    setIsEditing(false);
+    if (activeNote) {
+      setEditTitle(activeNote.title || '');
+      setEditSubject(activeNote.subject || 'General');
+      setEditContent(activeNote.content || activeNote.textContent || '');
+      setEditTags(activeNote.tags ? activeNote.tags.join(', ') : '');
+      setIsPinned(Boolean(activeNote.isPinned));
+      setGraphData(activeNote.visualGraph || null);
+    }
+  };
+
+  const handleTogglePin = async (note: StudentNotebookNote, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     const updated: StudentNotebookNote = {
       ...note,
       isPinned: !note.isPinned,
+      updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
     };
-    onSaveNote(updated);
-    if (note.id === activeNoteId) {
-      setIsPinned(!note.isPinned);
+    try {
+      await onSaveNote(updated);
+      soundEffects.playPop();
+      if (note.id === activeNoteId) {
+        setIsPinned(!note.isPinned);
+      }
+      showToast(updated.isPinned ? 'Note pinned to top' : 'Note unpinned');
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to update pin status.', 'error');
     }
-    showToast(note.isPinned ? 'Note unpinned' : 'Note pinned to top');
   };
 
-  const handleDelete = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (confirm('Are you sure you want to delete this study note?')) {
-      onDeleteNote(id);
-      showToast('Note deleted');
-      if (activeNoteId === id) {
-        const remaining = notes.filter((n) => n.id !== id);
-        if (remaining.length > 0) {
-          setActiveNoteId(remaining[0].id);
+  const handleDelete = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const targetNote = notes.find((n) => n.id === id);
+    const title = targetNote ? `"${targetNote.title}"` : 'this note';
+    if (window.confirm(`Are you sure you want to delete ${title}? This action cannot be undone.`)) {
+      try {
+        await onDeleteNote(id);
+        soundEffects.playPop();
+        showToast('Note deleted successfully.');
+        if (activeNoteId === id) {
+          const remaining = notes.filter((n) => n.id !== id);
+          if (remaining.length > 0) {
+            setActiveNoteId(remaining[0].id);
+          } else {
+            setActiveNoteId('');
+          }
         }
+      } catch (err: any) {
+        showToast(err?.message || 'Failed to delete note.', 'error');
       }
     }
   };
 
   const handleExport = (format: 'markdown' | 'text') => {
     if (!activeNote) return;
-    const text = activeNote.content;
+    const text = activeNote.content || activeNote.textContent || '';
     const filename = `${activeNote.title.toLowerCase().replace(/[^a-z0-9]/g, '_')}.${format === 'markdown' ? 'md' : 'txt'}`;
     const blob = new Blob([text], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -372,10 +454,10 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
 
           <Button
             size="sm"
-            onClick={handleCreateNewNote}
+            onClick={() => handleCreateNewNote()}
             leftIcon={<Plus className="w-4 h-4" />}
           >
-            New Note
+            Create Note
           </Button>
         </div>
       </div>
@@ -406,7 +488,7 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
                 onOpenFolder={(f) => setSelectedFolderForModal(f)}
                 onQuickAdd={(f) => {
                   setSelectedSubjectFilter(f.subject);
-                  handleCreateNewNote();
+                  handleCreateNewNote(f.subject);
                   setViewMode('editor');
                 }}
               />
@@ -419,16 +501,36 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
         {/* Left Sidebar: Notes Directory */}
         <div className="lg:col-span-4 space-y-4">
           <div className="bg-white rounded-2xl border border-[#E1E5E1] p-4 shadow-2xs space-y-3">
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="w-4 h-4 text-[#89918C] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Search notes, tags..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full text-xs bg-[#F8F9F6] border border-[#E1E5E1] rounded-xl pl-9 pr-3 py-2 outline-none focus:border-[#16835B] transition-colors"
-              />
+            {/* Search Input & Quick Create */}
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-[#89918C] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search title, subject, content..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full text-xs bg-[#F8F9F6] border border-[#E1E5E1] rounded-xl pl-9 pr-7 py-2 outline-none focus:border-[#16835B] transition-colors"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[#89918C] hover:text-[#171A18]"
+                    title="Clear search"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => handleCreateNewNote()}
+                className="w-8 h-8 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#16835B] border border-emerald-200/80 flex items-center justify-center shrink-0 transition-colors shadow-2xs"
+                title="Create Note (+)"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
             </div>
 
             {/* Subject Filter Pills */}
@@ -450,17 +552,29 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
 
             {/* Notes List */}
             <div className="space-y-2 max-h-[580px] overflow-y-auto pr-1">
-              {sortedNotes.length === 0 ? (
+              {isLoadingNotes ? (
                 <div className="text-center py-8 text-[#89918C] text-xs">
-                  No notes found. Click &quot;New Note&quot; to write one.
+                  <div className="w-5 h-5 rounded-full border-2 border-[#16835B] border-t-transparent animate-spin mx-auto mb-2" />
+                  Loading notebook from cloud...
+                </div>
+              ) : sortedNotes.length === 0 ? (
+                <div className="text-center py-8 text-[#89918C] text-xs space-y-2">
+                  <p className="font-semibold text-[#171A18]">No notes found</p>
+                  <p className="text-[11px] text-[#5F6762]">
+                    {searchQuery ? 'Try clearing your search query or filters.' : 'Click "Create Note" to add your first note.'}
+                  </p>
+                  <Button size="sm" onClick={() => handleCreateNewNote()} leftIcon={<Plus className="w-3.5 h-3.5" />}>
+                    Create Note
+                  </Button>
                 </div>
               ) : (
                 sortedNotes.map((note) => {
-                  const isActive = note.id === activeNoteId;
+                  const isActive = !isCreatingNew && note.id === activeNoteId;
                   return (
                     <div
                       key={note.id}
                       onClick={() => {
+                        setIsCreatingNew(false);
                         setActiveNoteId(note.id);
                         setIsEditing(false);
                       }}
@@ -528,7 +642,7 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
 
         {/* Right Area: Active Note View / Editor (8 Cols) */}
         <div className="lg:col-span-8">
-          {activeNote ? (
+          {isCreatingNew || activeNote ? (
             <div className="bg-white rounded-2xl border border-[#E1E5E1] shadow-2xs p-6 sm:p-7 space-y-6">
               {/* Note Header & Action Buttons */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E1E5E1]">
@@ -538,71 +652,114 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
                       type="text"
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
-                      placeholder="Note Title..."
+                      placeholder="Note Title (Required)..."
                       className="w-full text-lg sm:text-xl font-bold text-[#171A18] border-b border-[#16835B] outline-none pb-1"
+                      autoFocus
                     />
                   ) : (
                     <h2 className="text-xl sm:text-2xl font-extrabold text-[#171A18] tracking-tight">
-                      {activeNote.title}
+                      {activeNote?.title}
                     </h2>
                   )}
 
                   <div className="flex items-center gap-3 mt-1 text-xs text-[#89918C]">
-                    <span>Subject: <strong className="text-[#171A18]">{activeNote.subject}</strong></span>
+                    <span>Subject: <strong className="text-[#171A18]">{isEditing ? editSubject : activeNote?.subject}</strong></span>
                     <span>&bull;</span>
-                    <span>Updated {activeNote.updatedAt}</span>
+                    <span>{isCreatingNew ? 'Draft Note' : `Updated ${activeNote?.updatedAt}`}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
-                  {/* Visual Diagram Button */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setIsDrawingModalOpen(true);
-                      setTimeout(initCanvas, 50);
-                    }}
-                    leftIcon={<PenTool className="w-3.5 h-3.5 text-[#16835B]" />}
-                  >
-                    Draw Diagram
-                  </Button>
-
-                  {/* AI Visual Concept Graph */}
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleGenerateConceptGraph}
-                    leftIcon={<Network className="w-3.5 h-3.5 text-[#16835B]" />}
-                  >
-                    Concept Graph
-                  </Button>
-
-                  {/* Toggle Edit Mode */}
                   {isEditing ? (
-                    <Button size="sm" onClick={handleSaveActiveNote} leftIcon={<Check className="w-3.5 h-3.5" />}>
-                      Save
-                    </Button>
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCancelEdit}
+                        leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleSaveActiveNote}
+                        leftIcon={<Check className="w-3.5 h-3.5" />}
+                        disabled={isSaving}
+                      >
+                        {isSaving ? 'Saving...' : 'Save Note'}
+                      </Button>
+                    </>
                   ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsEditing(true)}
-                      leftIcon={<Edit3 className="w-3.5 h-3.5" />}
-                    >
-                      Edit
-                    </Button>
-                  )}
+                    <>
+                      {/* Toggle Pin */}
+                      {activeNote && (
+                        <Button
+                          variant={isPinned ? "secondary" : "outline"}
+                          size="sm"
+                          onClick={(e) => handleTogglePin(activeNote, e)}
+                          leftIcon={<Pin className={`w-3.5 h-3.5 ${isPinned ? 'fill-[#16835B] text-[#16835B]' : 'text-[#89918C]'}`} />}
+                        >
+                          {isPinned ? 'Pinned' : 'Pin'}
+                        </Button>
+                      )}
 
-                  {/* Export Options */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleExport('markdown')}
-                    title="Export as Markdown"
-                  >
-                    <FileDown className="w-4 h-4" />
-                  </Button>
+                      {/* Visual Diagram Button */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setIsDrawingModalOpen(true);
+                          setTimeout(initCanvas, 50);
+                        }}
+                        leftIcon={<PenTool className="w-3.5 h-3.5 text-[#16835B]" />}
+                      >
+                        Draw Diagram
+                      </Button>
+
+                      {/* AI Visual Concept Graph */}
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleGenerateConceptGraph}
+                        leftIcon={<Network className="w-3.5 h-3.5 text-[#16835B]" />}
+                      >
+                        Concept Graph
+                      </Button>
+
+                      {/* Toggle Edit Mode */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsEditing(true)}
+                        leftIcon={<Edit3 className="w-3.5 h-3.5" />}
+                      >
+                        Edit
+                      </Button>
+
+                      {/* Export Options */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleExport('markdown')}
+                        title="Export as Markdown"
+                      >
+                        <FileDown className="w-4 h-4" />
+                      </Button>
+
+                      {/* Delete */}
+                      {activeNote && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => handleDelete(activeNote.id, e)}
+                          className="text-[#89918C] hover:text-rose-600 hover:bg-rose-50"
+                          title="Delete note"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -648,13 +805,33 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
                   placeholder="Type your notes in Markdown or plain text..."
                 />
               ) : (
-                <div className="prose prose-emerald max-w-none text-sm text-[#171A18] leading-relaxed whitespace-pre-line">
-                  {activeNote.content || activeNote.textContent}
+                <div className="space-y-4">
+                  <div className="prose prose-emerald max-w-none text-sm text-[#171A18] leading-relaxed whitespace-pre-line">
+                    {activeNote?.content || activeNote?.textContent}
+                  </div>
+
+                  {/* Render tags in view mode */}
+                  {activeNote?.tags && activeNote.tags.length > 0 && (
+                    <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-[#E1E5E1]/60">
+                      <span className="text-[11px] text-[#89918C] font-semibold">Tags:</span>
+                      {activeNote.tags.map((t, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setSearchQuery(t)}
+                          className="text-[11px] font-medium text-[#5F6762] bg-[#F4F5F1] hover:bg-emerald-50 hover:text-[#16835B] px-2 py-0.5 rounded-md transition-colors"
+                          title={`Filter notes by #${t}`}
+                        >
+                          #{t}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
               {/* Attached Visual Diagram if exists */}
-              {activeNote.drawingDataUrl && (
+              {activeNote?.drawingDataUrl && (
                 <div className="mt-4 p-4 rounded-xl border border-[#E1E5E1] bg-[#F8F9F6]/60">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold text-[#16835B] flex items-center gap-1.5">
@@ -682,12 +859,17 @@ export const MyNotesView: React.FC<MyNotesViewProps> = ({
               )}
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-dashed border-[#E1E5E1] p-12 text-center text-[#89918C]">
-              <BookOpen className="w-10 h-10 mx-auto mb-3 text-[#89918C]" />
+            <div className="bg-white rounded-2xl border border-dashed border-[#E1E5E1] p-12 text-center text-[#89918C] space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-[#16835B] flex items-center justify-center mx-auto">
+                <BookOpen className="w-6 h-6" />
+              </div>
               <h3 className="text-base font-bold text-[#171A18]">No Note Selected</h3>
-              <p className="text-xs text-[#5F6762] mt-1">
-                Select a note from the left sidebar or create a new note.
+              <p className="text-xs text-[#5F6762] max-w-sm mx-auto">
+                Select a note from your directory on the left or create a new personal study note.
               </p>
+              <Button size="sm" onClick={() => handleCreateNewNote()} leftIcon={<Plus className="w-4 h-4" />}>
+                Create Note
+              </Button>
             </div>
           )}
         </div>

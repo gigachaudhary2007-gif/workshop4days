@@ -30,10 +30,17 @@ export interface UserProfileData {
  */
 export interface NoteDocument {
   noteId: string;
+  id?: string;
   userId: string;
   title: string;
+  subject?: string;
   content: string;
+  tags?: string[];
+  isPinned?: boolean;
+  folder?: string;
   originalFileUrl?: string;
+  drawingDataUrl?: string;
+  visualGraph?: VisualGraphData;
   createdAt: string;
   updatedAt: string;
 }
